@@ -1,0 +1,71 @@
+use std::{
+    cmp::{max, min},
+    ops::Range,
+};
+
+/// `[start, end)` range.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+}
+
+impl Default for Span {
+    fn default() -> Self {
+        Self { start: 0, end: 0 }
+    }
+}
+
+impl Span {
+    pub fn new(start: usize, end: usize) -> Self {
+        Self { start, end }
+    }
+
+    pub fn len(&self) -> usize {
+        self.end - self.start
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.start == self.end
+    }
+
+    pub fn contains(&self, pos: usize) -> bool {
+        pos >= self.start && pos < self.end
+    }
+
+    pub fn contains_span(&self, span: Span) -> bool {
+        span.start >= self.start && span.end <= self.end
+    }
+
+    pub fn merge(&self, span: Self) -> Self {
+        Self {
+            start: min(span.start, self.start),
+            end: max(span.end, self.end),
+        }
+    }
+
+    pub fn shift(&self, offset: isize) -> Self {
+        Self {
+            start: self.start.wrapping_add_signed(offset),
+            end: self.end.wrapping_add_signed(offset),
+        }
+    }
+}
+
+impl From<(usize, usize)> for Span {
+    fn from(value: (usize, usize)) -> Self {
+        Self {
+            start: value.0,
+            end: value.1,
+        }
+    }
+}
+
+impl From<Range<usize>> for Span {
+    fn from(value: Range<usize>) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+        }
+    }
+}
