@@ -66,7 +66,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
     /// Allocate an expression node in the arena and return a handle to it.
     fn alloc_expr(&self, expr: Expr<'arena>) -> ExprPtr<'arena, 'arena> {
-        self.arena.alloc(expr).into()
+        self.arena.alloc(expr)
     }
 
     // ── top-level parsing ────────────────────────────────────────────

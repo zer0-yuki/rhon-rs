@@ -1,5 +1,4 @@
 use std::cell::UnsafeCell;
-use std::ops::{Deref, DerefMut};
 
 use crate::common::arena::chunk::Chunk;
 
@@ -43,7 +42,7 @@ impl<T> Arena<T> {
         &chunks[len - 1]
     }
 
-    pub fn alloc(&self, value: T) -> ArenaPtrMut<'_, T> {
+    pub fn alloc(&self, value: T) -> &mut T {
         if self.current_chunk().is_full() {
             let new_chunk = Chunk::new(self.chunk_capacity);
             unsafe {
@@ -54,43 +53,11 @@ impl<T> Arena<T> {
         let ptr = unsafe { &mut *chunk.current_ptr() };
         *ptr = value;
         chunk.inc_used();
-        ArenaPtrMut(ptr)
+        ptr
     }
 }
 
 unsafe impl<T: Send> Send for Arena<T> {}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ArenaPtr<'arena, T>(&'arena T);
-
-impl<'arena, T> Deref for ArenaPtr<'arena, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        self.0
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ArenaPtrMut<'arena, T>(&'arena mut T);
-
-impl<'arena, T> Deref for ArenaPtrMut<'arena, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        self.0
-    }
-}
-
-impl<'arena, T> DerefMut for ArenaPtrMut<'arena, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0
-    }
-}
-
-impl<'arena, T> From<ArenaPtrMut<'arena, T>> for ArenaPtr<'arena, T> {
-    fn from(value: ArenaPtrMut<'arena, T>) -> Self {
-        Self(value.0)
-    }
-}
 
 #[cfg(test)]
 mod tests {

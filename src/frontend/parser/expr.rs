@@ -1,7 +1,4 @@
-use crate::common::{
-    arena::{ArenaPtrMut, ArenaPtr},
-    span::Span,
-};
+use crate::common::span::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PrefixOp {
@@ -17,8 +14,8 @@ pub enum InfixOp {
     Div,
 }
 
-pub type ExprPtr<'arena, 'ecx> = ArenaPtr<'arena, Expr<'ecx>>;
-pub type ExprPtrMut<'arena, 'ecx> = ArenaPtrMut<'arena, Expr<'ecx>>;
+pub type ExprPtr<'arena, 'ecx> = &'arena Expr<'ecx>;
+pub type ExprPtrMut<'arena, 'ecx> = &'arena Expr<'ecx>;
 
 // ── Expr / ExprKind ───────────────────────────────────────────────────────
 
