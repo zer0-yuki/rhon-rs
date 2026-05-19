@@ -5,18 +5,26 @@ use std::ops::{Deref, DerefMut};
 use std::ptr;
 
 struct Chunk<T> {
+    /// Pointer which points to the start of a memory block.
     ptr: *mut MaybeUninit<T>,
+    /// Capacity of chunk.
     capacity: usize,
+    /// Chunk used.
+    ///
+    /// [`Cell`] for internal mutability of [`Chunk::inc_used`].
     used: Cell<usize>,
 }
 
 impl<T> Chunk<T> {
     fn new(capacity: usize) -> Self {
+        // Ensure the capacity not equal to 0,
+        // Because allocating a 0-sized memory will cause a UB
         let capacity = if capacity == 0 { 1 } else { capacity };
         let layout = Layout::array::<MaybeUninit<T>>(capacity).unwrap();
         let ptr = unsafe { std::alloc::alloc(layout) as *mut MaybeUninit<T> };
         if ptr.is_null() {
-            std::alloc::handle_alloc_error(layout);
+            // This will directly panic
+            std::alloc::handle_alloc_error(layout)
         }
         Chunk {
             ptr,
@@ -25,6 +33,7 @@ impl<T> Chunk<T> {
         }
     }
 
+    /// Get raw pointer of index-th element.
     unsafe fn slot_ptr(&self, index: usize) -> *mut T {
         unsafe { self.ptr.add(index) as *mut T }
     }
