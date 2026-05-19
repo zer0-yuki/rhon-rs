@@ -67,8 +67,13 @@ unsafe impl<#[may_dangle] T> Drop for Chunk<T> {
 }
 
 pub struct Arena<T> {
-    chunks: UnsafeCell<Vec<Chunk<T>>>, // first drop
+    /// Chunks collection.
+    ///
+    /// Should be in **first** field place to make sure it is **first** dropped,
+    /// so that no dangling pointer is produced, i.e. [`Arena::current_ptr`].
+    chunks: UnsafeCell<Vec<Chunk<T>>>,
     chunk_capacity: usize,
+    /// Pointer which points to current free slot, unless current chunk is full.
     current_ptr: UnsafeCell<*mut T>,
 }
 
