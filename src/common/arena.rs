@@ -1,6 +1,7 @@
 use std::alloc::Layout;
 use std::cell::{Cell, UnsafeCell};
 use std::mem::MaybeUninit;
+use std::ops::{Deref, DerefMut};
 use std::ptr;
 
 struct Chunk<T> {
@@ -11,6 +12,7 @@ struct Chunk<T> {
 
 impl<T> Chunk<T> {
     fn new(capacity: usize) -> Self {
+        let capacity = if capacity == 0 { 1 } else { capacity };
         let layout = Layout::array::<MaybeUninit<T>>(capacity).unwrap();
         let ptr = unsafe { std::alloc::alloc(layout) as *mut MaybeUninit<T> };
         if ptr.is_null() {
@@ -49,8 +51,14 @@ impl<T> Chunk<T> {
     }
 }
 
+unsafe impl<#[may_dangle] T> Drop for Chunk<T> {
+    fn drop(&mut self) {
+        unsafe { self.destroy() }
+    }
+}
+
 pub struct Arena<T> {
-    chunks: UnsafeCell<Vec<Chunk<T>>>,
+    chunks: UnsafeCell<Vec<Chunk<T>>>, // first drop
     chunk_capacity: usize,
     current_ptr: UnsafeCell<*mut T>,
 }
@@ -84,7 +92,8 @@ impl<T> Arena<T> {
 
     fn current_chunk(&self) -> &Chunk<T> {
         let chunks = unsafe { &*self.chunks.get() };
-        &chunks[chunks.len() - 1]
+        let len = chunks.len();
+        &chunks[len - 1]
     }
 
     fn debug_check_current_ptr(&self) {
@@ -96,7 +105,7 @@ impl<T> Arena<T> {
         }
     }
 
-    pub fn alloc(&self, value: T) -> &mut T {
+    pub fn alloc(&self, value: T) -> ArenaPtrMut<'_, T> {
         self.debug_check_current_ptr();
         let chunk = self.current_chunk();
         if chunk.used() >= chunk.capacity {
@@ -113,22 +122,43 @@ impl<T> Arena<T> {
             ptr.write(value);
             *self.current_ptr.get() = ptr.add(1);
         }
-        unsafe { &mut *ptr }
-    }
-}
-
-impl<T> Drop for Arena<T> {
-    fn drop(&mut self) {
-        let chunks = unsafe { &mut *self.chunks.get() };
-        for chunk in chunks {
-            unsafe {
-                chunk.destroy();
-            }
-        }
+        unsafe { ArenaPtrMut(&mut *ptr) }
     }
 }
 
 unsafe impl<T: Send> Send for Arena<T> {}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ArenaPtr<'arena, T>(&'arena T);
+
+impl<'arena, T> Deref for ArenaPtr<'arena, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ArenaPtrMut<'arena, T>(&'arena mut T);
+
+impl<'arena, T> Deref for ArenaPtrMut<'arena, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+impl<'arena, T> DerefMut for ArenaPtrMut<'arena, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0
+    }
+}
+
+impl<'arena, T> From<ArenaPtrMut<'arena, T>> for ArenaPtr<'arena, T> {
+    fn from(value: ArenaPtrMut<'arena, T>) -> Self {
+        Self(value.0)
+    }
+}
 
 #[cfg(test)]
 mod tests {
