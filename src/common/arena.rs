@@ -87,6 +87,7 @@ impl<T> Arena<T> {
         }
     }
 
+    /// Convert provided chunk size to capacity.
     fn size_to_capacity(size: usize) -> usize {
         std::cmp::max(size / std::mem::size_of::<T>(), 1)
     }
@@ -105,6 +106,7 @@ impl<T> Arena<T> {
         &chunks[len - 1]
     }
 
+    /// Check if current ptr is exactly head ptr shifting `used`
     fn debug_check_current_ptr(&self) {
         unsafe {
             debug_assert_eq!(
