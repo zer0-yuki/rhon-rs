@@ -16,7 +16,7 @@ pub struct Lexer<'src> {
     /// Used to disambiguate `+`/`-` as sign vs operator.
     prev_is_whitespace: bool,
 
-    cur: Token,
+    current: Token,
     next: Token,
 
     diagnostics: Vec<LexDiagnostic>,
@@ -29,17 +29,17 @@ impl<'src> Lexer<'src> {
             pos: 0,
             linebreaks: vec![],
             prev_is_whitespace: false,
-            cur: Token::eof(),
+            current: Token::eof(),
             next: Token::eof(),
             diagnostics: Vec::new(),
         };
-        lexer.cur = lexer.next_token();
+        lexer.current = lexer.next_token();
         lexer.next = lexer.next_token();
         lexer
     }
 
-    pub fn cur(&self) -> &Token {
-        &self.cur
+    pub fn current(&self) -> &Token {
+        &self.current
     }
 
     pub fn next(&self) -> &Token {
@@ -50,7 +50,7 @@ impl<'src> Lexer<'src> {
     pub fn advance(&mut self) -> Token {
         let next = self.next_token();
         let prev_next = std::mem::replace(&mut self.next, next);
-        let prev_cur = std::mem::replace(&mut self.cur, prev_next);
+        let prev_cur = std::mem::replace(&mut self.current, prev_next);
         prev_cur
     }
 

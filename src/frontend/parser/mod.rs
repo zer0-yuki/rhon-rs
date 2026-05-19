@@ -53,7 +53,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     }
 
     fn peek(&self) -> &Token {
-        self.lexer.cur()
+        self.lexer.current()
     }
 
     // ---- arena ----
