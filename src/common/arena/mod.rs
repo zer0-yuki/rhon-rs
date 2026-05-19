@@ -13,8 +13,6 @@ pub struct Arena<T> {
     chunk_capacity: usize,
 }
 
-const DEFAULT_CHUNK_SIZE: usize = 4096;
-
 impl<T> Arena<T> {
     pub fn with_chunk_capacity(cap: usize) -> Self {
         Arena {
@@ -33,6 +31,7 @@ impl<T> Arena<T> {
     }
 
     pub fn new() -> Self {
+        const DEFAULT_CHUNK_SIZE: usize = 4096;
         Self::with_chunk_size(DEFAULT_CHUNK_SIZE)
     }
 

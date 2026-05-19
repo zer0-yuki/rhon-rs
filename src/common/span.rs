@@ -1,7 +1,4 @@
-use std::{
-    cmp::{max, min},
-    ops::Range,
-};
+use std::{cmp, ops::Range};
 
 /// `[start, end)` range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -39,8 +36,8 @@ impl Span {
 
     pub fn merge(&self, span: Self) -> Self {
         Self {
-            start: min(span.start, self.start),
-            end: max(span.end, self.end),
+            start: cmp::min(span.start, self.start),
+            end: cmp::max(span.end, self.end),
         }
     }
 

@@ -33,15 +33,11 @@ impl<'src> Lexer<'src> {
             next: Token::eof(),
             diagnostics: Vec::new(),
         };
-        // Pre-fetch first two tokens (matching the TS lookahead pattern)
         lexer.cur = lexer.next_token();
         lexer.next = lexer.next_token();
         lexer
     }
 
-    // ── Public API for the parser ──────────────────────────────────────
-
-    /// The current token the parser should inspect.
     pub fn cur(&self) -> &Token {
         &self.cur
     }
@@ -68,8 +64,6 @@ impl<'src> Lexer<'src> {
             span: self.make_span(start),
         })
     }
-
-    // ── Internal helpers ───────────────────────────────────────────────
 
     fn peek_char(&self) -> char {
         self.source
@@ -233,8 +227,6 @@ impl<'src> Iterator for Lexer<'src> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // ── Helpers ──
 
     /// Collect all tokens (excluding EOF) from source.
     fn lex_all(src: &str) -> Vec<Token> {

@@ -1,6 +1,5 @@
 use crate::common::span::Span;
 
-/// Diagnostics produced during lexing.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LexDiagnosticKind {
     UnclosedStringLiteral,

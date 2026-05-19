@@ -7,7 +7,7 @@ pub enum TokenKind {
     Number(f64),
     String(String),
 
-    // Identifiers / keywords
+    // Identifiers
     Ident(String),
 
     // Symbols

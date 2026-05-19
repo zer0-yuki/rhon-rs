@@ -14,18 +14,12 @@ mod diagnostic;
 mod expr;
 mod precedence;
 
-// ── Supercombinator ───────────────────────────────────────────────────────
-
-/// A top-level binding: `name arg1 ... argN = body;`
 #[derive(Debug, Clone)]
 pub struct Supercombinator<'arena> {
     pub name: String,
     pub args: Vec<String>,
-    /// Handle into the parser's arena.  Valid while the parser lives.
     pub body: ExprPtr<'arena, 'arena>,
 }
-
-// ── Parser ────────────────────────────────────────────────────────────────
 
 pub struct Parser<'src, 'arena> {
     lexer: Lexer<'src>,
@@ -42,7 +36,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         }
     }
 
-    // ── diagnostics ──────────────────────────────────────────────────
+    // ---- diagnostics ----
 
     pub fn diagnostics(&self) -> &[ParseDiagnostic] {
         &self.diagnostics
@@ -52,7 +46,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         self.diagnostics.push(ParseDiagnostic { kind, span });
     }
 
-    // ── raw lexer access ─────────────────────────────────────────────
+    // ---- lexer ----
 
     fn eat(&mut self) -> Token {
         self.lexer.advance()
@@ -62,19 +56,14 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         self.lexer.cur()
     }
 
-    // ── arena helpers ────────────────────────────────────────────────
+    // ---- arena ----
 
-    /// Allocate an expression node in the arena and return a handle to it.
     fn alloc_expr(&self, expr: Expr<'arena>) -> ExprPtr<'arena, 'arena> {
         self.arena.alloc(expr)
     }
 
-    // ── top-level parsing ────────────────────────────────────────────
+    // ---- parsing ----
 
-    /// Parse a sequence of top-level supercombinators until EOF.
-    ///
-    /// The returned [`Supercombinator`]s hold raw pointers into the
-    /// parser's arena.  Access their bodies via [`get_expr`](Self::get_expr).
     pub fn parse(&mut self) -> Vec<Supercombinator<'arena>> {
         let mut scs = Vec::new();
         while self.peek().kind != TokenKind::Eof {
@@ -85,12 +74,10 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         scs
     }
 
-    /// Parse a single supercombinator (`name args... = body;`).
     fn parse_sc(&mut self) -> Option<Supercombinator<'arena>> {
         let mut is_ident_first = true;
         let name: String;
 
-        // ── find the binding name ────────────────────────────────────
         loop {
             // Clone / copy what we need from peek() so the borrow
             // does not conflict with the mutable calls below.
@@ -110,6 +97,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
                 TokenKind::Ident(n) => {
                     name = n.clone();
                     self.eat();
+                    // only if meet an ident we can normally parse an SC
                     break;
                 }
                 _ => {
@@ -123,7 +111,6 @@ impl<'src, 'arena> Parser<'src, 'arena> {
             self.report(ParseDiagnosticKind::NotABinding, Span::default());
         }
 
-        // ── collect arguments ────────────────────────────────────────
         let mut args: Vec<String> = Vec::new();
         loop {
             let kind = self.peek().kind.clone();
@@ -165,10 +152,9 @@ impl<'src, 'arena> Parser<'src, 'arena> {
             }
         }
 
-        // ── parse body ───────────────────────────────────────────────
         let body = self.parse_expr();
 
-        // ── expect closing semicolon ─────────────────────────────────
+        // finally expect a semicolon
         let cur = self.eat();
         if cur.kind != TokenKind::SemiColon {
             self.report(
@@ -183,32 +169,26 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         Some(Supercombinator { name, args, body })
     }
 
-    // ── expression parsing ───────────────────────────────────────────
-
-    /// Parse an expression at the lowest precedence level.
     fn parse_expr(&mut self) -> ExprPtr<'arena, 'arena> {
         self.parse_expr_bp(Precedence::Lowest)
     }
 
-    /// Core Pratt parser — parse an expression with the given minimum
-    /// binding power.
+    /// Core Pratt parser — parse an expression with the given minimum binding power.
     ///
-    /// Returns an [`ExprPtr`] handle into the arena.  The handle is
-    /// valid as long as the parser is alive.
+    /// Returns an [`ExprPtr`] handle into the arena.
+    /// The handle is valid as long as the parser is alive.
     fn parse_expr_bp(&mut self, min_bp: Precedence) -> ExprPtr<'arena, 'arena> {
         let cur = self.eat();
 
-        // ── prefix (nud) ────────────────────────────────────────────
         let mut left = self.parse_prefix(&cur);
 
-        // ── infix (led) loop ─────────────────────────────────────────
         loop {
             let bp = match infix_left_bp(&self.peek().kind) {
                 Some(bp) => bp,
                 None => break,
             };
             if min_bp >= bp {
-                break;
+                break
             }
             left = self.parse_infix(left);
         }
