@@ -11,7 +11,7 @@ use crate::{
 };
 
 mod diagnostic;
-pub mod expr;
+mod expr;
 mod precedence;
 
 // ── Supercombinator ───────────────────────────────────────────────────────
