@@ -12,20 +12,15 @@ pub struct Arena<T> {
     /// so that no dangling pointer is produced, i.e. [`Arena::current_ptr`].
     chunks: UnsafeCell<Vec<Chunk<T>>>,
     chunk_capacity: usize,
-    /// Pointer which points to current free slot, unless current chunk is full.
-    current_ptr: UnsafeCell<*mut T>,
 }
 
 const DEFAULT_CHUNK_SIZE: usize = 4096;
 
 impl<T> Arena<T> {
     pub fn with_chunk_capacity(cap: usize) -> Self {
-        let first = Chunk::new(cap);
-        let start_ptr = unsafe { first.head_ptr() };
         Arena {
-            chunks: UnsafeCell::new(vec![first]),
+            chunks: UnsafeCell::new(vec![Chunk::new(cap)]),
             chunk_capacity: cap,
-            current_ptr: UnsafeCell::new(start_ptr),
         }
     }
 
@@ -48,31 +43,18 @@ impl<T> Arena<T> {
         &chunks[len - 1]
     }
 
-    /// Check if current ptr is exactly head ptr shifting `used`
-    fn debug_check_current_ptr(&self) {
-        unsafe {
-            debug_assert_eq!(*self.current_ptr.get(), self.current_chunk().current_ptr());
-        }
-    }
-
     pub fn alloc(&self, value: T) -> ArenaPtrMut<'_, T> {
-        self.debug_check_current_ptr();
-        let chunk = self.current_chunk();
-        if chunk.is_full() {
+        if self.current_chunk().is_full() {
             let new_chunk = Chunk::new(self.chunk_capacity);
             unsafe {
-                let new_start = new_chunk.head_ptr();
                 (*self.chunks.get()).push(new_chunk);
-                *self.current_ptr.get() = new_start;
             }
         }
-        self.current_chunk().inc_used();
-        let ptr = unsafe { *self.current_ptr.get() };
-        unsafe {
-            ptr.write(value);
-            *self.current_ptr.get() = ptr.add(1);
-        }
-        unsafe { ArenaPtrMut(&mut *ptr) }
+        let chunk = self.current_chunk();
+        let ptr = unsafe { &mut *chunk.current_ptr() };
+        *ptr = value;
+        chunk.inc_used();
+        ArenaPtrMut(ptr)
     }
 }
 

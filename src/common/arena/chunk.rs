@@ -32,10 +32,6 @@ impl<T> Chunk<T> {
         }
     }
 
-    pub(super) unsafe fn head_ptr(&self) -> *mut T {
-        self.ptr as *mut T
-    }
-
     pub(super) unsafe fn current_ptr(&self) -> *mut T {
         unsafe { self.slot_ptr(self.used.get()) }
     }
