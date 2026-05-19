@@ -21,7 +21,7 @@ const DEFAULT_CHUNK_SIZE: usize = 4096;
 impl<T> Arena<T> {
     pub fn with_chunk_capacity(cap: usize) -> Self {
         let first = Chunk::new(cap);
-        let start_ptr = unsafe { first.slot_ptr(0) };
+        let start_ptr = unsafe { first.head_ptr() };
         Arena {
             chunks: UnsafeCell::new(vec![first]),
             chunk_capacity: cap,
@@ -51,20 +51,17 @@ impl<T> Arena<T> {
     /// Check if current ptr is exactly head ptr shifting `used`
     fn debug_check_current_ptr(&self) {
         unsafe {
-            debug_assert_eq!(
-                *self.current_ptr.get(),
-                self.current_chunk().slot_ptr(self.current_chunk().used())
-            );
+            debug_assert_eq!(*self.current_ptr.get(), self.current_chunk().current_ptr());
         }
     }
 
     pub fn alloc(&self, value: T) -> ArenaPtrMut<'_, T> {
         self.debug_check_current_ptr();
         let chunk = self.current_chunk();
-        if chunk.used() >= chunk.capacity {
+        if chunk.is_full() {
             let new_chunk = Chunk::new(self.chunk_capacity);
             unsafe {
-                let new_start = new_chunk.slot_ptr(0);
+                let new_start = new_chunk.head_ptr();
                 (*self.chunks.get()).push(new_chunk);
                 *self.current_ptr.get() = new_start;
             }

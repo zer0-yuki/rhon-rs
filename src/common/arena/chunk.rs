@@ -7,7 +7,7 @@ pub(super) struct Chunk<T> {
     /// Pointer which points to the start of a memory block.
     ptr: *mut MaybeUninit<T>,
     /// Capacity of chunk.
-    pub(super) capacity: usize,
+    capacity: usize,
     /// Chunk used.
     ///
     /// [`Cell`] for internal mutability of [`Chunk::inc_used`].
@@ -32,13 +32,25 @@ impl<T> Chunk<T> {
         }
     }
 
+    pub(super) unsafe fn head_ptr(&self) -> *mut T {
+        self.ptr as *mut T
+    }
+
+    pub(super) unsafe fn current_ptr(&self) -> *mut T {
+        unsafe { self.slot_ptr(self.used.get()) }
+    }
+
     /// Get raw pointer of index-th element.
-    pub(super) unsafe fn slot_ptr(&self, index: usize) -> *mut T {
+    unsafe fn slot_ptr(&self, index: usize) -> *mut T {
         unsafe { self.ptr.add(index) as *mut T }
     }
 
     pub(super) fn used(&self) -> usize {
         self.used.get()
+    }
+
+    pub(super) fn is_full(&self) -> bool {
+        self.used.get() >= self.capacity
     }
 
     pub(super) fn inc_used(&self) {
