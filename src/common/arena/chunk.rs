@@ -73,3 +73,5 @@ unsafe impl<#[may_dangle] T> Drop for Chunk<T> {
         unsafe { self.destroy() }
     }
 }
+
+unsafe impl<T: Send> Send for Chunk<T> {}
