@@ -50,9 +50,9 @@ impl<T> Arena<T> {
             }
         }
         let chunk = self.current_chunk();
+        chunk.inc_used();
         let ptr = unsafe { &mut *chunk.current_ptr() };
         *ptr = value;
-        chunk.inc_used();
         ptr
     }
 }
