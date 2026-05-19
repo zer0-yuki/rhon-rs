@@ -46,6 +46,7 @@ impl<T> Chunk<T> {
         self.used.set(self.used() + 1)
     }
 
+    /// Release all `T` elements and deallocate memory.
     unsafe fn destroy(&mut self) {
         let used = self.used();
         for i in 0..used {
@@ -81,12 +82,10 @@ const DEFAULT_CHUNK_SIZE: usize = 4096;
 
 impl<T> Arena<T> {
     pub fn with_chunk_capacity(cap: usize) -> Self {
-        let mut chunks = Vec::new();
         let first = Chunk::new(cap);
         let start_ptr = unsafe { first.slot_ptr(0) };
-        chunks.push(first);
         Arena {
-            chunks: UnsafeCell::new(chunks),
+            chunks: UnsafeCell::new(vec![first]),
             chunk_capacity: cap,
             current_ptr: UnsafeCell::new(start_ptr),
         }
