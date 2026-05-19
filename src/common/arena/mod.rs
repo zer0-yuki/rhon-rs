@@ -1,71 +1,9 @@
-use std::alloc::Layout;
-use std::cell::{Cell, UnsafeCell};
-use std::mem::MaybeUninit;
+use std::cell::UnsafeCell;
 use std::ops::{Deref, DerefMut};
-use std::ptr;
 
-struct Chunk<T> {
-    /// Pointer which points to the start of a memory block.
-    ptr: *mut MaybeUninit<T>,
-    /// Capacity of chunk.
-    capacity: usize,
-    /// Chunk used.
-    ///
-    /// [`Cell`] for internal mutability of [`Chunk::inc_used`].
-    used: Cell<usize>,
-}
+use crate::common::arena::chunk::Chunk;
 
-impl<T> Chunk<T> {
-    fn new(capacity: usize) -> Self {
-        // Ensure the capacity not equal to 0,
-        // Because allocating a 0-sized memory will cause a UB
-        let capacity = if capacity == 0 { 1 } else { capacity };
-        let layout = Layout::array::<MaybeUninit<T>>(capacity).unwrap();
-        let ptr = unsafe { std::alloc::alloc(layout) as *mut MaybeUninit<T> };
-        if ptr.is_null() {
-            // This will directly panic
-            std::alloc::handle_alloc_error(layout)
-        }
-        Chunk {
-            ptr,
-            capacity,
-            used: Cell::new(0),
-        }
-    }
-
-    /// Get raw pointer of index-th element.
-    unsafe fn slot_ptr(&self, index: usize) -> *mut T {
-        unsafe { self.ptr.add(index) as *mut T }
-    }
-
-    fn used(&self) -> usize {
-        self.used.get()
-    }
-
-    fn inc_used(&self) {
-        self.used.set(self.used() + 1)
-    }
-
-    /// Release all `T` elements and deallocate memory.
-    unsafe fn destroy(&mut self) {
-        let used = self.used();
-        for i in 0..used {
-            unsafe {
-                ptr::drop_in_place(self.slot_ptr(i));
-            }
-        }
-        let layout = Layout::array::<MaybeUninit<T>>(self.capacity).unwrap();
-        unsafe {
-            std::alloc::dealloc(self.ptr as *mut u8, layout);
-        }
-    }
-}
-
-unsafe impl<#[may_dangle] T> Drop for Chunk<T> {
-    fn drop(&mut self) {
-        unsafe { self.destroy() }
-    }
-}
+mod chunk;
 
 pub struct Arena<T> {
     /// Chunks collection.
