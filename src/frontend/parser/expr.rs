@@ -15,7 +15,6 @@ pub enum InfixOp {
 }
 
 pub type ExprPtr<'arena, 'ecx> = &'arena Expr<'ecx>;
-pub type ExprPtrMut<'arena, 'ecx> = &'arena Expr<'ecx>;
 
 // ── Expr / ExprKind ───────────────────────────────────────────────────────
 
