@@ -9,7 +9,7 @@ use crate::{common::span::Span, frontend::lexer::diagnostic::LexDiagnosticKind};
 pub struct Lexer<'src> {
     source: &'src str,
     /// Current line number (1-based).
-    line: usize,
+    linebreaks: Vec<usize>,
     /// Current byte position in [`source`](Self::source).
     pos: usize,
     /// Whether the previous token was preceded by whitespace.
@@ -27,7 +27,7 @@ impl<'src> Lexer<'src> {
         let mut lexer = Self {
             source,
             pos: 0,
-            line: 1,
+            linebreaks: vec![],
             prev_is_whitespace: false,
             cur: Token::eof(),
             next: Token::eof(),
@@ -88,14 +88,18 @@ impl<'src> Lexer<'src> {
         c
     }
 
+    fn tag_linebreak(&mut self) {
+        self.linebreaks.push(self.pos)
+    }
+
     fn skip_whitespace(&mut self) {
         self.prev_is_whitespace = false;
         loop {
             match self.peek_char() {
                 '\n' => {
                     self.prev_is_whitespace = true;
+                    self.tag_linebreak();
                     self.advance_char();
-                    self.line += 1;
                 }
                 ' ' | '\t' | '\r' => {
                     self.prev_is_whitespace = true;
@@ -143,7 +147,7 @@ impl<'src> Lexer<'src> {
                     return Token::new(TokenKind::String(String::new()), self.make_span(start));
                 }
                 '\n' => {
-                    self.line += 1;
+                    self.tag_linebreak();
                     self.advance_char();
                 }
                 _ => {

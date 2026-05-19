@@ -4,7 +4,11 @@ use rhon_rs::{
 };
 
 fn main() {
-    let source = r#"x = "hi"; id x = x;"#;
+    let source = r#"
+    x = "hi";
+    id x = x;
+    square x = x * x;
+    "#;
     let lexer = Lexer::new(source);
     let mut arena = Arena::new();
 
