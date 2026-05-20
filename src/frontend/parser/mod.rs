@@ -83,13 +83,8 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         loop {
             let kind = &self.peek().kind;
             let span = self.peek().span;
-            match &kind {
-                TokenKind::Eof => {
-                    self.report(ParseDiagnosticKind::NotABinding, span);
-                    self.eat();
-                    return None;
-                }
-                TokenKind::SemiColon => {
+            match kind {
+                TokenKind::Eof | TokenKind::SemiColon => {
                     self.report(ParseDiagnosticKind::NotABinding, span);
                     self.eat();
                     return None;
