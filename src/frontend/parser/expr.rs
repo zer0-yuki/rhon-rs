@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::common::span::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,10 +33,16 @@ pub enum ExprKind<'arena> {
     Err,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Expr<'arena> {
     pub kind: ExprKind<'arena>,
     pub span: Span,
+}
+
+impl<'arena> fmt::Debug for Expr<'arena> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} @ {:?}", self.kind, self.span)
+    }
 }
 
 impl<'arena> Expr<'arena> {

@@ -1,10 +1,16 @@
-use std::{cmp, ops::Range};
+use std::{cmp, fmt, ops::Range};
 
 /// `[start, end)` range.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
+}
+
+impl fmt::Debug for Span {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}..{}", self.start, self.end)
+    }
 }
 
 impl Default for Span {
