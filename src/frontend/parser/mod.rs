@@ -66,7 +66,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
     pub fn parse(&mut self) -> Vec<Supercombinator<'arena>> {
         let mut scs = Vec::new();
-        while self.peek().kind != TokenKind::Eof {
+        while !self.peek().kind.is_eof() {
             if let Some(sc) = self.parse_sc() {
                 scs.push(sc);
             }

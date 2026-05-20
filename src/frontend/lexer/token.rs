@@ -10,26 +10,38 @@ pub enum TokenKind {
     // Identifiers
     Ident(String),
 
-    // Symbols
+    // Operators
     Plus,
     Minus,
     Star,
     Slash,
+    Dot,
+
+    // Delimiters
     LParen,
     RParen,
-    Equal,
     Colon,
     SemiColon,
     LBrace,
     RBrace,
     Comma,
-    Dot,
+    Equal,
 
     // Sentinel
     Eof,
 
     // Dummy
     Err,
+}
+
+impl TokenKind {
+    pub fn is_eof(&self) -> bool {
+        matches!(self, Self::Eof)
+    }
+
+    pub fn is_err(&self) -> bool {
+        matches!(self, Self::Err)
+    }
 }
 
 /// A lexical token produced by the lexer.
