@@ -3,9 +3,10 @@ use crate::{
     frontend::{
         lexer::{Lexer, Token, TokenKind},
         parser::{
+            associativity::Associativity,
             diagnostic::{ParseDiagnostic, ParseDiagnosticKind},
             expr::{Expr, ExprKind, ExprPtr, InfixOp, PrefixOp},
-            precedence::{Precedence, infix_left_bp, infix_right_bp},
+            precedence::{BindingPower, Precedence},
         },
     },
 };
@@ -143,7 +144,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         // Finally expect a semicolon
         let mut is_semicolon = true;
         let cur = loop {
-        let cur = self.eat();
+            let cur = self.eat();
             if matches!(cur.kind, TokenKind::SemiColon) {
                 break cur;
             }
@@ -164,30 +165,57 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     }
 
     fn parse_expr(&mut self) -> ExprPtr<'arena, 'arena> {
-        self.parse_expr_bp(Precedence::Lowest)
+        self.parse_expr_bp(BindingPower::lowest())
     }
 
     /// Core Pratt parser — parse an expression with the given minimum binding power.
     ///
     /// Returns an [`ExprPtr`] handle into the arena.
     /// The handle is valid as long as the parser is alive.
-    fn parse_expr_bp(&mut self, min_bp: Precedence) -> ExprPtr<'arena, 'arena> {
+    fn parse_expr_bp(&mut self, min_bp: BindingPower) -> ExprPtr<'arena, 'arena> {
         let cur = self.eat();
         let mut left = self.parse_prefix(cur);
         let mut seen_non_assoc = false;
 
         loop {
-            let bp = match infix_left_bp(&self.peek().kind) {
-                Some(bp) => bp,
-                None => break,
+            let precedence = Precedence::try_from_infix(&self.peek().kind);
+            let precedence = match precedence {
+                Some(p) => p,
+                None => break, // Because it is not an operator
             };
-            if min_bp >= bp {
-                break
+
+            // Non-associative operators (e.g. ==, <, >) cannot be chained
+            // without explicit grouping.
+            if seen_non_assoc && matches!(precedence.associativity(), Associativity::None) {
+                self.report(ParseDiagnosticKind::NonAssociativeChain, self.peek().span);
+                // Error recovery: stop at this level to avoid cascading errors.
+                break;
             }
-            left = self.parse_infix(left);
+
+            let (lbp, _) = precedence.to_infix_bp();
+            if min_bp >= lbp {
+                break;
+            }
+
+            if matches!(precedence, Precedence::Call) {
+                left = self.parse_app(left);
+            } else {
+                left = self.parse_infix(left);
+            }
+
+            if matches!(precedence.associativity(), Associativity::None) {
+                seen_non_assoc = true;
+            }
         }
 
         left
+    }
+
+    fn parse_app(&mut self, left: ExprPtr<'arena, 'arena>) -> ExprPtr<'arena, 'arena> {
+        let (_, rbp) = Precedence::Call.to_infix_bp();
+        let right = self.parse_expr_bp(rbp);
+        let span = left.span.merge(right.span);
+        self.alloc_expr(Expr::new(ExprKind::App(left, right), span))
     }
 
     /// Parse a token as the **start** of an expression.
@@ -238,42 +266,31 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     /// Parse an infix (left denotation) operator and its right-hand side.
     fn parse_infix(&mut self, left: ExprPtr<'arena, 'arena>) -> ExprPtr<'arena, 'arena> {
         // Copy everything we need from peek() before any mutable call.
-        let op_kind = self.peek().kind.clone();
-        let op_span = self.peek().span;
+        let op_tok = self.eat();
 
-        match &op_kind {
-            // ── binary arithmetic operators ──────────────────────────
+        match &op_tok.kind {
             TokenKind::Plus | TokenKind::Minus | TokenKind::Star | TokenKind::Slash => {
-                let op = match &op_kind {
+                let op = match &op_tok.kind {
                     TokenKind::Plus => InfixOp::Add,
                     TokenKind::Minus => InfixOp::Sub,
                     TokenKind::Star => InfixOp::Mul,
                     TokenKind::Slash => InfixOp::Div,
+
                     _ => unreachable!(),
                 };
-                self.eat(); // consume the operator
-                let right = self.parse_expr_bp(infix_right_bp(&op_kind));
-                let span = op_span.merge(left.span).merge(right.span);
+                // Safe to unwrap, because it is called when an infix op peeked
+                let (_, rbp) = Precedence::try_from_infix(&op_tok.kind)
+                    .unwrap()
+                    .to_infix_bp();
+                let right = self.parse_expr_bp(rbp);
+                let span = op_tok.span.merge(left.span).merge(right.span);
                 self.alloc_expr(Expr::new(ExprKind::Infix(op, left, right), span))
             }
-
-            // ── function application (juxtaposition) ─────────────────
-            //
-            // `f x y`  →  App(App(f, x), y)
-            //
-            // We do NOT eat the operator — the recursive call's
-            // initial `eat()` will consume it as the start of the
-            // argument expression.
-            TokenKind::Number(_)
-            | TokenKind::String(_)
-            | TokenKind::Ident(_)
-            | TokenKind::LParen => {
-                let right = self.parse_expr_bp(infix_right_bp(&op_kind));
-                let span = left.span.merge(right.span);
-                self.alloc_expr(Expr::new(ExprKind::App(left, right), span))
+            TokenKind::Dot => {
+                // TODO: Maybe need a new ExprKind
+                unimplemented!()
             }
-
-            _ => unreachable!("infix_left_bp returned Some but parse_infix has no handler"),
+            _ => unreachable!("Not an infix operator but got in `parse_infix`: {:?}", left),
         }
     }
 }

@@ -1,4 +1,23 @@
-use crate::frontend::lexer::TokenKind;
+use crate::frontend::{lexer::TokenKind, parser::associativity::Associativity};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct BindingPower(u8);
+
+impl BindingPower {
+    pub fn prefix() -> Self {
+        (Precedence::Prefix as u8).into()
+    }
+
+    pub fn lowest() -> Self {
+        (Precedence::Lowest as u8).into()
+    }
+}
+
+impl From<u8> for BindingPower {
+    fn from(value: u8) -> Self {
+        Self(value)
+    }
+}
 
 /// Operator precedence, from loosest to tightest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -16,39 +35,62 @@ pub enum Precedence {
     Relational = 70,
     Sum        = 80,
     Product    = 90,
+    /// Only used by [`Precedence::prefix_bp`].
     Prefix     = 100,
     Exponent   = 110,
     Call       = 120,
     Member     = 130,
 }
 
-/// Return the **left** binding power of a token when it acts as an infix
-/// operator.
-///
-/// Returns `None` when the token cannot appear as an infix at all.
-pub(crate) fn infix_left_bp(kind: &TokenKind) -> Option<Precedence> {
-    use Precedence::*;
+impl Precedence {
+    pub fn try_from_infix(kind: &TokenKind) -> Option<Self> {
+        use Precedence::*;
 
-    Some(match kind {
-        // Operators that bind as infix operators.
-        TokenKind::Plus | TokenKind::Minus => Sum,
-        TokenKind::Star | TokenKind::Slash => Product,
-        // Function application (juxtaposition).
-        TokenKind::Number(_) | TokenKind::String(_) | TokenKind::Ident(_) | TokenKind::LParen => {
-            Call
+        Some(match kind {
+            // Operators that bind as infix operators.
+            TokenKind::Plus | TokenKind::Minus => Sum,
+            TokenKind::Star | TokenKind::Slash => Product,
+            TokenKind::Dot => Member,
+            // Function application (juxtaposition).
+            TokenKind::Number(_)
+            | TokenKind::String(_)
+            | TokenKind::Ident(_)
+            | TokenKind::LParen => Call,
+            // Everything else is not an infix operator.
+            _ => return None,
+        })
+    }
+
+    pub fn associativity(&self) -> Associativity {
+        use Precedence::*;
+
+        match self {
+            Lowest | Equality | Relational => Associativity::None,
+            Exponent => Associativity::Right,
+            _ => Associativity::Left,
         }
-        // Everything else is not an infix operator.
-        _ => return None,
-    })
+    }
+
+    pub fn to_infix_bp(&self) -> (BindingPower, BindingPower) {
+        use Associativity::*;
+
+        let bp = *self as u8;
+        let (lbp, rbp) = match self.associativity() {
+            Left => (bp, bp + 1),
+            Right => (bp + 1, bp),
+            None => (bp, bp + 1),
+        };
+        (lbp.into(), rbp.into())
+    }
 }
 
-/// Return the **right** binding power of a token — the precedence level
-/// passed to the recursive `parse_expr_bp` call after consuming this
-/// infix operator.
-///
-/// For left-associative operators, this equals `left_bp`.
-/// For right-associative operators, this would be one level *lower* than `left_bp`.
-#[inline]
-pub(crate) fn infix_right_bp(kind: &TokenKind) -> Precedence {
-    infix_left_bp(kind).unwrap_or(Precedence::Lowest)
-}
+// /// Return the infix `(left, right)` binding power with [`Associativity`] of a token.
+// ///
+// /// Returns [`None`] when the token cannot appear as an infix at all.
+// pub fn infix_bp_assoc(kind: &TokenKind) -> Option<(BindingPower, BindingPower, Associativity)> {
+//     Precedence::try_from_infix(kind).map(|p| {
+//         let (lbp, rbp) = p.to_infix_bp();
+//         let assoc = p.associativity();
+//         (lbp, rbp, assoc)
+//     })
+// }
