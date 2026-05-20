@@ -16,8 +16,8 @@ pub enum Precedence {
     Relational = 70,
     Sum        = 80,
     Product    = 90,
-    Prefix     = 110,
-    Exponent   = 100,
+    Prefix     = 100,
+    Exponent   = 110,
     Call       = 120,
     Member     = 130,
 }
