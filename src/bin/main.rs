@@ -1,9 +1,6 @@
 use rhon_rs::{
     common::arena::Arena,
-    frontend::{
-        lexer::{Lexer, Token, TokenKind},
-        parser::Parser,
-    },
+    frontend::{lexer::Lexer, parser::Parser},
 };
 
 fn main() {
