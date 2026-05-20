@@ -1,13 +1,18 @@
 use rhon_rs::{
     common::arena::Arena,
-    frontend::{lexer::Lexer, parser::Parser},
+    frontend::{
+        lexer::{Lexer, Token, TokenKind},
+        parser::Parser,
+    },
 };
 
 fn main() {
     let source = r#"
-    x = "hi";
-    id x = x;
-    square x = x * x;
+    x = 1 + 2 + 3;
+    y = 1 + 2 * 3;
+    z = (1 + 2) * 3;
+    cube x = x * x * x;
+    pipe x f = f x y;
     "#;
     let lexer = Lexer::new(source);
     let mut arena = Arena::new();
@@ -18,7 +23,7 @@ fn main() {
 
     for sc in &scs {
         println!("{} {:?} =", sc.name, sc.args);
-        println!("  -> {:?}", sc.body.kind);
+        println!("  ->\n{:?}", sc.body.kind);
     }
 
     for diag in parser.diagnostics() {
@@ -27,31 +32,3 @@ fn main() {
     let vec = vec![1];
     drop(vec);
 }
-
-// enum Recursive<'ptr> {
-//     None,
-//     Next(ArenaPtr<'ptr, Recursive<'ptr>>),
-// }
-
-// struct Test<'arena, 'ptr>(&'arena Arena<Recursive<'ptr>>);
-
-// impl<'a, 'ptr> Test<'a, 'ptr> {
-//     fn new(arena: &'a Arena<Recursive<'ptr>>) -> Self {
-//         Self(arena)
-//     }
-
-//     fn alloc(&self, value: Recursive<'ptr>) -> ArenaPtr<'_, Recursive<'ptr>> {
-//         self.0.alloc(value).into()
-//     }
-
-//     fn do_sth(&self) {
-//         let n = self.alloc(Recursive::None);
-//         let next = Recursive::Next(n);
-//         self.alloc(next);
-//     }
-// }
-
-// fn test() {
-//     let arena = Arena::new();
-//     let test = Test::new(&arena);
-// }
