@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+pub mod associativity;
 mod diagnostic;
 mod expr;
 pub mod precedence;
