@@ -3,7 +3,7 @@ use crate::frontend::lexer::TokenKind;
 /// Operator precedence, from loosest to tightest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
-#[allow(dead_code)] // reserved for future operators
+#[rustfmt::skip]
 pub enum Precedence {
     Lowest = 0,
     Assignment = 10,
