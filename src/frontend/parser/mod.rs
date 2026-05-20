@@ -12,7 +12,7 @@ use crate::{
 
 mod diagnostic;
 mod expr;
-mod precedence;
+pub mod precedence;
 
 #[derive(Debug, Clone)]
 pub struct Supercombinator<'arena> {
