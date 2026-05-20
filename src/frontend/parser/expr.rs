@@ -16,7 +16,7 @@ pub enum InfixOp {
     Div,
 }
 
-pub type ExprPtr<'arena, 'ecx> = &'arena Expr<'ecx>;
+pub type ExprPtr<'arena> = &'arena Expr<'arena>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExprKind<'arena> {
@@ -25,10 +25,10 @@ pub enum ExprKind<'arena> {
 
     Var(String),
 
-    Prefix(PrefixOp, ExprPtr<'arena, 'arena>),
-    Infix(InfixOp, ExprPtr<'arena, 'arena>, ExprPtr<'arena, 'arena>),
+    Prefix(PrefixOp, ExprPtr<'arena>),
+    Infix(InfixOp, ExprPtr<'arena>, ExprPtr<'arena>),
 
-    App(ExprPtr<'arena, 'arena>, ExprPtr<'arena, 'arena>),
+    App(ExprPtr<'arena>, ExprPtr<'arena>),
 
     Err,
 }

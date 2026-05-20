@@ -20,7 +20,7 @@ pub mod precedence;
 pub struct Supercombinator<'arena> {
     pub name: String,
     pub args: Vec<String>,
-    pub body: ExprPtr<'arena, 'arena>,
+    pub body: ExprPtr<'arena>,
 }
 
 pub struct Parser<'src, 'arena> {
@@ -61,7 +61,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
     // ---- arena ----
 
-    fn alloc_expr(&self, expr: Expr<'arena>) -> ExprPtr<'arena, 'arena> {
+    fn alloc_expr(&self, expr: Expr<'arena>) -> ExprPtr<'arena> {
         self.arena.alloc(expr)
     }
 
@@ -164,7 +164,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         Some(Supercombinator { name, args, body })
     }
 
-    fn parse_expr(&mut self) -> ExprPtr<'arena, 'arena> {
+    fn parse_expr(&mut self) -> ExprPtr<'arena> {
         self.parse_expr_bp(BindingPower::lowest())
     }
 
@@ -172,7 +172,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     ///
     /// Returns an [`ExprPtr`] handle into the arena.
     /// The handle is valid as long as the parser is alive.
-    fn parse_expr_bp(&mut self, min_bp: BindingPower) -> ExprPtr<'arena, 'arena> {
+    fn parse_expr_bp(&mut self, min_bp: BindingPower) -> ExprPtr<'arena> {
         let cur = self.eat();
         let mut left = self.parse_prefix(cur);
         let mut seen_non_assoc = false;
@@ -211,7 +211,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         left
     }
 
-    fn parse_app(&mut self, left: ExprPtr<'arena, 'arena>) -> ExprPtr<'arena, 'arena> {
+    fn parse_app(&mut self, left: ExprPtr<'arena>) -> ExprPtr<'arena> {
         let (_, rbp) = Precedence::Call.to_infix_bp();
         let right = self.parse_expr_bp(rbp);
         let span = left.span.merge(right.span);
@@ -219,7 +219,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     }
 
     /// Parse a token as the **start** of an expression.
-    fn parse_prefix(&mut self, token: Token) -> ExprPtr<'arena, 'arena> {
+    fn parse_prefix(&mut self, token: Token) -> ExprPtr<'arena> {
         match token.kind {
             TokenKind::Number(n) => self.alloc_expr(Expr::new(ExprKind::Number(n), token.span)),
 
@@ -264,7 +264,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     }
 
     /// Parse an infix (left denotation) operator and its right-hand side.
-    fn parse_infix(&mut self, left: ExprPtr<'arena, 'arena>) -> ExprPtr<'arena, 'arena> {
+    fn parse_infix(&mut self, left: ExprPtr<'arena>) -> ExprPtr<'arena> {
         // Copy everything we need from peek() before any mutable call.
         let op_tok = self.eat();
 
