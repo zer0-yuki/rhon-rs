@@ -52,6 +52,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         self.lexer.advance()
     }
 
+    /// Peek current token with no cost.
     fn peek(&self) -> &Token {
         self.lexer.current()
     }
@@ -78,10 +79,9 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         let mut is_ident_first = true;
         let name: String;
 
+        // Parse an ident as name
         loop {
-            // Clone / copy what we need from peek() so the borrow
-            // does not conflict with the mutable calls below.
-            let kind = self.peek().kind.clone();
+            let kind = &self.peek().kind;
             let span = self.peek().span;
             match &kind {
                 TokenKind::Eof => {
@@ -111,6 +111,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
             self.report(ParseDiagnosticKind::NotABinding, Span::default());
         }
 
+        // Parse args and equal token
         let mut args: Vec<String> = Vec::new();
         loop {
             let kind = self.peek().kind.clone();
@@ -154,7 +155,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
         let body = self.parse_expr();
 
-        // finally expect a semicolon
+        // Finally expect a semicolon
         let cur = self.eat();
         if cur.kind != TokenKind::SemiColon {
             self.report(
@@ -196,7 +197,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         left
     }
 
-    /// Parse a token as the **start** of an expression (null denotation).
+    /// Parse a token as the **start** of an expression.
     fn parse_prefix(&mut self, token: &Token) -> ExprPtr<'arena, 'arena> {
         match &token.kind {
             TokenKind::Number(n) => self.alloc_expr(Expr::new(ExprKind::Number(*n), token.span)),
