@@ -99,7 +99,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         };
 
         if !is_ident_first {
-            self.report(ParseDiagnosticKind::NotABinding,  Default::default());
+            self.report(ParseDiagnosticKind::NotABinding, Default::default());
         }
 
         // Parse args and equal token
