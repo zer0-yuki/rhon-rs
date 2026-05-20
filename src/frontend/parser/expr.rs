@@ -28,7 +28,6 @@ pub enum ExprKind<'arena> {
 
     App(ExprPtr<'arena, 'arena>, ExprPtr<'arena, 'arena>),
 
-    Unknown,
     Err,
 }
 
@@ -41,13 +40,6 @@ pub struct Expr<'arena> {
 impl<'arena> Expr<'arena> {
     pub fn new(kind: ExprKind<'arena>, span: Span) -> Self {
         Self { kind, span }
-    }
-
-    pub fn unknown() -> Self {
-        Self {
-            kind: ExprKind::Unknown,
-            span: Default::default(),
-        }
     }
 
     pub fn err() -> Self {
