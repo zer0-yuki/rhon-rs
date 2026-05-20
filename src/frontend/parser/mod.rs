@@ -173,8 +173,8 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     /// The handle is valid as long as the parser is alive.
     fn parse_expr_bp(&mut self, min_bp: Precedence) -> ExprPtr<'arena, 'arena> {
         let cur = self.eat();
-
-        let mut left = self.parse_prefix(&cur);
+        let mut left = self.parse_prefix(cur);
+        let mut seen_non_assoc = false;
 
         loop {
             let bp = match infix_left_bp(&self.peek().kind) {
@@ -191,32 +191,28 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     }
 
     /// Parse a token as the **start** of an expression.
-    fn parse_prefix(&mut self, token: &Token) -> ExprPtr<'arena, 'arena> {
-        match &token.kind {
-            TokenKind::Number(n) => self.alloc_expr(Expr::new(ExprKind::Number(*n), token.span)),
+    fn parse_prefix(&mut self, token: Token) -> ExprPtr<'arena, 'arena> {
+        match token.kind {
+            TokenKind::Number(n) => self.alloc_expr(Expr::new(ExprKind::Number(n), token.span)),
 
-            TokenKind::String(s) => {
-                self.alloc_expr(Expr::new(ExprKind::String(s.clone()), token.span))
-            }
+            TokenKind::String(s) => self.alloc_expr(Expr::new(ExprKind::String(s), token.span)),
 
-            TokenKind::Ident(name) => {
-                self.alloc_expr(Expr::new(ExprKind::Var(name.clone()), token.span))
-            }
+            TokenKind::Ident(name) => self.alloc_expr(Expr::new(ExprKind::Var(name), token.span)),
 
             TokenKind::Plus => {
-                let right = self.parse_expr_bp(Precedence::Prefix);
+                let right = self.parse_expr_bp(BindingPower::prefix());
                 let span = token.span.merge(right.span);
                 self.alloc_expr(Expr::new(ExprKind::Prefix(PrefixOp::Pos, right), span))
             }
 
             TokenKind::Minus => {
-                let right = self.parse_expr_bp(Precedence::Prefix);
+                let right = self.parse_expr_bp(BindingPower::prefix());
                 let span = token.span.merge(right.span);
                 self.alloc_expr(Expr::new(ExprKind::Prefix(PrefixOp::Neg, right), span))
             }
 
             TokenKind::LParen => {
-                let inner = self.parse_expr_bp(Precedence::Lowest);
+                let inner = self.parse_expr_bp(BindingPower::lowest());
                 let next = self.eat();
                 if next.kind != TokenKind::RParen {
                     self.report(ParseDiagnosticKind::UnclosedLParen, token.span);
@@ -231,9 +227,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
             _ => {
                 self.report(
-                    ParseDiagnosticKind::NotAnExpression {
-                        found: token.kind.clone(),
-                    },
+                    ParseDiagnosticKind::NotAnExpression { found: token.kind },
                     token.span,
                 );
                 self.alloc_expr(Expr::err())
