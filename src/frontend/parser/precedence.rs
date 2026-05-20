@@ -83,14 +83,3 @@ impl Precedence {
         (lbp.into(), rbp.into())
     }
 }
-
-// /// Return the infix `(left, right)` binding power with [`Associativity`] of a token.
-// ///
-// /// Returns [`None`] when the token cannot appear as an infix at all.
-// pub fn infix_bp_assoc(kind: &TokenKind) -> Option<(BindingPower, BindingPower, Associativity)> {
-//     Precedence::try_from_infix(kind).map(|p| {
-//         let (lbp, rbp) = p.to_infix_bp();
-//         let assoc = p.associativity();
-//         (lbp, rbp, assoc)
-//     })
-// }
