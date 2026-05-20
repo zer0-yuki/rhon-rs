@@ -5,20 +5,21 @@ use crate::frontend::lexer::TokenKind;
 #[repr(u8)]
 #[rustfmt::skip]
 pub enum Precedence {
-    Lowest = 0,
-    Assignment = 10,
-    LogicalOr = 20,
-    LogicalAnd = 30,
-    BitwiseOr = 40,
-    BitwiseXor = 50,
-    BitwiseAnd = 60,
-    Equality = 70,
-    Relational = 80,
-    Sum = 90,
-    Product = 100,
-    Prefix = 110,
-    Call = 120,
-    Member = 130,
+    /// Dummy, not used for returns.
+    Lowest     = 0,
+    LogicalOr  = 10,
+    LogicalAnd = 20,
+    BitwiseOr  = 30,
+    BitwiseXor = 40,
+    BitwiseAnd = 50,
+    Equality   = 60,
+    Relational = 70,
+    Sum        = 80,
+    Product    = 90,
+    Prefix     = 110,
+    Exponent   = 100,
+    Call       = 120,
+    Member     = 130,
 }
 
 /// Return the **left** binding power of a token when it acts as an infix
