@@ -78,30 +78,24 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
     fn parse_sc(&mut self) -> Option<Supercombinator<'arena>> {
         let mut is_ident_first = true;
-        let name: String;
 
         // Parse an ident as name
-        loop {
-            let kind = &self.peek().kind;
-            let span = self.peek().span;
-            match kind {
+        let name = loop {
+            let cur = self.eat();
+            match cur.kind {
                 TokenKind::Eof | TokenKind::SemiColon => {
-                    self.report(ParseDiagnosticKind::NotABinding, span);
-                    self.eat();
+                    self.report(ParseDiagnosticKind::NotABinding, cur.span);
                     return None;
                 }
-                TokenKind::Ident(n) => {
-                    name = n.clone();
-                    self.eat();
+                TokenKind::Ident(name) => {
                     // only if meet an ident we can normally parse an SC
-                    break;
+                    break name;
                 }
                 _ => {
                     is_ident_first = false;
-                    self.eat();
                 }
             }
-        }
+        };
 
         if !is_ident_first {
             self.report(ParseDiagnosticKind::NotABinding, Span::default());
@@ -110,18 +104,16 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         // Parse args and equal token
         let mut args: Vec<String> = Vec::new();
         loop {
-            let kind = self.peek().kind.clone();
-            let span = self.peek().span;
-            match &kind {
+            let cur = self.eat();
+            match cur.kind {
                 TokenKind::Eof | TokenKind::SemiColon => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["ident", "colon"],
-                            found: kind.clone(),
+                            expected: &["ident", "equal"],
+                            found: cur.kind,
                         },
-                        span,
+                        cur.span,
                     );
-                    self.eat();
                     return Some(Supercombinator {
                         name,
                         args,
@@ -129,22 +121,19 @@ impl<'src, 'arena> Parser<'src, 'arena> {
                     });
                 }
                 TokenKind::Equal => {
-                    self.eat();
                     break;
                 }
-                TokenKind::Ident(n) => {
-                    args.push(n.clone());
-                    self.eat();
+                TokenKind::Ident(name) => {
+                    args.push(name);
                 }
                 _ => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["ident", "colon"],
-                            found: kind.clone(),
+                            expected: &["ident", "equal"],
+                            found: cur.kind,
                         },
-                        span,
+                        cur.span,
                     );
-                    self.eat();
                 }
             }
         }
@@ -152,8 +141,16 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         let body = self.parse_expr();
 
         // Finally expect a semicolon
+        let mut is_semicolon = true;
+        let cur = loop {
         let cur = self.eat();
-        if cur.kind != TokenKind::SemiColon {
+            if matches!(cur.kind, TokenKind::SemiColon) {
+                break cur;
+            }
+            is_semicolon = false;
+            self.eat();
+        };
+        if !is_semicolon {
             self.report(
                 ParseDiagnosticKind::UnexpectedToken {
                     expected: &["semicolon"],
