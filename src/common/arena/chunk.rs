@@ -68,7 +68,7 @@ impl<T> Chunk<T> {
     }
 }
 
-unsafe impl<#[may_dangle] T> Drop for Chunk<T> {
+impl<T> Drop for Chunk<T> {
     fn drop(&mut self) {
         unsafe { self.destroy() }
     }
