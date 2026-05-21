@@ -374,7 +374,7 @@ mod test {
         T: IntoIterator<Item = TokenKind>,
         T::IntoIter: DoubleEndedIterator,
     {
-        let tokens = token_kinds.into_iter().map(Token::new_dummy);
+        let tokens = token_kinds.into_iter().map(TokenKind::into_token);
         let actual = parse_ok(&mut SliceStream::new(tokens));
 
         assert_len_eq(&actual, sc_defs);
@@ -409,7 +409,7 @@ mod test {
             Supercombinator {
                 name: "x".into(),
                 args: vec![],
-                body: Box::new(Expr::new_dummy(Number(1.0))),
+                body: Box::new(Number(1.0).into_expr()),
             }
         };
         assert_expr_eq(token_kinds, &expected);

@@ -31,6 +31,15 @@ pub enum ExprKind {
     Err,
 }
 
+impl ExprKind {
+    pub fn into_expr(self) -> Expr {
+        Expr {
+            kind: self,
+            span: Span::DUMMY,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Expr {
     pub kind: ExprKind,
@@ -51,12 +60,5 @@ impl Expr {
 
     pub fn new(kind: ExprKind, span: Span) -> Self {
         Self { kind, span }
-    }
-
-    pub fn new_dummy(kind: ExprKind) -> Self {
-        Self {
-            kind,
-            span: Span::DUMMY,
-        }
     }
 }

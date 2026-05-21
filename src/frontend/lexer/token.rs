@@ -35,6 +35,13 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
+    pub fn into_token(self) -> Token {
+        Token {
+            kind: self,
+            span: Span::DUMMY,
+        }
+    }
+
     pub fn is_eof(&self) -> bool {
         matches!(self, Self::Eof)
     }
@@ -54,13 +61,6 @@ pub struct Token {
 impl Token {
     pub fn new(kind: TokenKind, span: Span) -> Self {
         Self { kind, span }
-    }
-
-    pub fn new_dummy(kind: TokenKind) -> Self {
-        Self {
-            kind,
-            span: Span::DUMMY,
-        }
     }
 
     pub const EOF: Token = Token {
