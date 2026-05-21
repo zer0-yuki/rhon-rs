@@ -1,12 +1,13 @@
 use crate::{
     common::span::Span,
     frontend::{
-        lexer::{Lexer, Token, TokenKind},
+        lexer::{Token, TokenKind},
         parser::{
             associativity::Associativity,
             diagnostic::{ParseDiagnostic, ParseDiagnosticKind},
             expr::{Expr, ExprKind, InfixOp, PrefixOp},
             precedence::{BindingPower, Precedence},
+            token_stream::TokenStream,
         },
     },
 };
@@ -15,6 +16,7 @@ pub mod associativity;
 mod diagnostic;
 mod expr;
 pub mod precedence;
+pub mod token_stream;
 
 #[derive(Debug, Clone)]
 pub struct Supercombinator {
@@ -23,15 +25,21 @@ pub struct Supercombinator {
     pub body: Box<Expr>,
 }
 
-pub struct Parser<'src> {
-    lexer: Lexer<'src>,
+pub struct Parser<'src, T>
+where
+    T: TokenStream,
+{
+    tokens: &'src mut T,
     diagnostics: Vec<ParseDiagnostic>,
 }
 
-impl<'src> Parser<'src> {
-    pub fn new(lexer: Lexer<'src>) -> Self {
+impl<'src, T> Parser<'src, T>
+where
+    T: TokenStream,
+{
+    pub fn new(tokens: &'src mut T) -> Self {
         Self {
-            lexer,
+            tokens,
             diagnostics: Vec::new(),
         }
     }
@@ -49,12 +57,12 @@ impl<'src> Parser<'src> {
     // ---- lexer ----
 
     fn eat(&mut self) -> Token {
-        self.lexer.advance()
+        self.tokens.advance()
     }
 
     /// Peek current token with no cost.
     fn peek(&self) -> &Token {
-        self.lexer.current()
+        self.tokens.current()
     }
 
     // ---- parsing ----

@@ -8,9 +8,9 @@ fn main() {
     cube x = x * x * x;
     pipe x f = f x y;
     "#;
-    let lexer = Lexer::new(source);
+    let mut lexer = Lexer::new(source);
 
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(&mut lexer);
 
     let scs = parser.parse();
 
