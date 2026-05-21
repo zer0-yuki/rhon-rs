@@ -306,3 +306,112 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::{iter, slice};
+
+    use crate::{common::utils::assert_len_eq, frontend::parser::token_stream::SliceStream};
+
+    use super::*;
+
+    /// Assert `actual` equal to `expected` recursively, skipping span check.
+    fn assert_expr_kind_eq(actual: &Expr, expected: &Expr) {
+        use ExprKind::*;
+        match (&actual.kind, &expected.kind) {
+            (Number(a), Number(e)) => assert_eq!(a, e),
+            (String(a), String(e)) => assert_eq!(a, e),
+            (Var(a), Var(e)) => assert_eq!(a, e),
+            (Prefix(op_a, a), Prefix(op_e, e)) => {
+                assert_eq!(op_a, op_e);
+                assert_expr_kind_eq(&a, &e);
+            }
+            (Infix(op_a, a1, a2), Infix(op_e, e1, e2)) => {
+                assert_eq!(op_a, op_e);
+                assert_expr_kind_eq(&a1, &e1);
+                assert_expr_kind_eq(&a2, &e2);
+            }
+            (App(a1, a2), App(e1, e2)) => {
+                assert_expr_kind_eq(&a1, &e1);
+                assert_expr_kind_eq(&a2, &e2);
+            }
+            (Err, Err) => {}
+            _ => {
+                panic!(
+                    "Different expression kind:\n   actual: {:?}\n expected: {:?}",
+                    actual, expected
+                );
+            }
+        }
+    }
+
+    /// Parse tokens.
+    fn parse<T>(tokens: &mut T) -> (Vec<Supercombinator>, Parser<'_, T>)
+    where
+        T: TokenStream,
+    {
+        let mut parser = Parser::new(tokens);
+        (parser.parse(), parser)
+    }
+
+    /// Parse tokens and ensure no errors.
+    ///
+    /// # Panics
+    /// If there are parsing errors, it will panic.
+    fn parse_ok(tokens: &mut impl TokenStream) -> Vec<Supercombinator> {
+        let (sc_defs, p) = parse(tokens);
+        assert_eq!(
+            p.diagnostics().len(),
+            0,
+            "Unexpected parse error:\n{:?}",
+            p.diagnostics()
+        );
+        sc_defs
+    }
+
+    fn assert_sc_defs_eq<T>(token_kinds: T, sc_defs: &[Supercombinator])
+    where
+        T: IntoIterator<Item = TokenKind>,
+        T::IntoIter: DoubleEndedIterator,
+    {
+        let tokens = token_kinds.into_iter().map(Token::new_dummy);
+        let actual = parse_ok(&mut SliceStream::new(tokens));
+
+        assert_len_eq(&actual, sc_defs);
+
+        for (a, e) in actual.iter().zip(sc_defs) {
+            assert_eq!(a.name, e.name);
+            assert_eq!(a.args, e.args);
+            assert_expr_kind_eq(&a.body, &e.body);
+        }
+    }
+
+    fn assert_expr_eq<T>(kinds: T, sc_def: &Supercombinator)
+    where
+        T: IntoIterator<Item = TokenKind>,
+        T::IntoIter: DoubleEndedIterator,
+    {
+        let kinds = iter::once(TokenKind::Ident("x".into()))
+            .chain(iter::once(TokenKind::Equal))
+            .chain(kinds)
+            .chain(iter::once(TokenKind::SemiColon));
+        assert_sc_defs_eq(kinds, slice::from_ref(sc_def))
+    }
+
+    #[test]
+    fn test() {
+        let token_kinds = {
+            use TokenKind::*;
+            [Number(1.0)]
+        };
+        let expected = {
+            use ExprKind::*;
+            Supercombinator {
+                name: "x".into(),
+                args: vec![],
+                body: Box::new(Expr::new_dummy(Number(1.0))),
+            }
+        };
+        assert_expr_eq(token_kinds, &expected);
+    }
+}
