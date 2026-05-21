@@ -44,14 +44,19 @@ impl fmt::Debug for Expr {
 }
 
 impl Expr {
+    pub const ERR: Expr = Expr {
+        kind: ExprKind::Err,
+        span: Span::DUMMY,
+    };
+
     pub fn new(kind: ExprKind, span: Span) -> Self {
         Self { kind, span }
     }
 
-    pub fn err() -> Self {
+    pub fn new_dummy(kind: ExprKind) -> Self {
         Self {
-            kind: ExprKind::Err,
-            span: Default::default(),
+            kind,
+            span: Span::DUMMY,
         }
     }
 }

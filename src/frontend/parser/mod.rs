@@ -118,7 +118,7 @@ where
                     return Some(Supercombinator {
                         name,
                         args,
-                        body: Box::new(Expr::err()),
+                        body: Box::new(Expr::ERR),
                     });
                 }
                 TokenKind::Equal => {
@@ -258,7 +258,7 @@ where
                     ParseDiagnosticKind::NotAnExpression { found: token.kind },
                     token.span,
                 );
-                Box::new(Expr::err())
+                Box::new(Expr::ERR)
             }
         }
     }
