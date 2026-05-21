@@ -231,6 +231,8 @@ impl<'src> Iterator for Lexer<'src> {
 
 #[cfg(test)]
 mod tests {
+    use crate::common::utils::assert_len_eq;
+
     use super::*;
 
     /// Collect all tokens (excluding EOF) from source.
@@ -239,15 +241,7 @@ mod tests {
     }
 
     fn assert_token_eq(actual: &[Token], expected: &[TokenKind]) {
-        assert_eq!(
-            actual.len(),
-            expected.len(),
-            "\nmismatch length:\n  left: (length {}) {:?}\n right: (length {}) {:?}\n",
-            actual.len(),
-            actual.iter().map(|a| &a.kind).collect::<Vec<_>>(),
-            expected.len(),
-            expected
-        );
+        assert_len_eq(actual, expected);
         for (a, e) in actual.iter().zip(expected) {
             assert_eq!(&a.kind, e);
         }
