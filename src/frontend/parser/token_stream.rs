@@ -7,27 +7,25 @@ pub trait TokenStream {
 
 pub struct SliceStream {
     tokens: Vec<Token>,
-    pos: usize,
 }
 
 impl SliceStream {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+    pub fn new<T>(tokens: T) -> Self
+    where
+        T: DoubleEndedIterator<Item = Token>,
+    {
+        Self {
+            tokens: tokens.rev().collect(),
+        }
     }
 }
 
 impl TokenStream for SliceStream {
     fn advance(&mut self) -> Token {
-        let cur = self.current().clone(); // TODO: clone is not good
-        self.pos += 1;
-        cur
+        self.tokens.pop().unwrap_or(Token::EOF)
     }
 
     fn current(&self) -> &Token {
-        if self.pos >= self.tokens.len() {
-            &Token::EOF
-        } else {
-            &self.tokens[self.pos]
-        }
+        &self.tokens.last().unwrap_or(&Token::EOF)
     }
 }
