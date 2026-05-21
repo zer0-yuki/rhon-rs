@@ -16,37 +16,35 @@ pub enum InfixOp {
     Div,
 }
 
-pub type ExprPtr<'arena> = &'arena Expr<'arena>;
-
 #[derive(Debug, Clone, PartialEq)]
-pub enum ExprKind<'arena> {
+pub enum ExprKind {
     Number(f64),
     String(String),
 
     Var(String),
 
-    Prefix(PrefixOp, ExprPtr<'arena>),
-    Infix(InfixOp, ExprPtr<'arena>, ExprPtr<'arena>),
+    Prefix(PrefixOp, Box<Expr>),
+    Infix(InfixOp, Box<Expr>, Box<Expr>),
 
-    App(ExprPtr<'arena>, ExprPtr<'arena>),
+    App(Box<Expr>, Box<Expr>),
 
     Err,
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Expr<'arena> {
-    pub kind: ExprKind<'arena>,
+pub struct Expr {
+    pub kind: ExprKind,
     pub span: Span,
 }
 
-impl<'arena> fmt::Debug for Expr<'arena> {
+impl fmt::Debug for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?} @ {:?}", self.kind, self.span)
     }
 }
 
-impl<'arena> Expr<'arena> {
-    pub fn new(kind: ExprKind<'arena>, span: Span) -> Self {
+impl Expr {
+    pub fn new(kind: ExprKind, span: Span) -> Self {
         Self { kind, span }
     }
 

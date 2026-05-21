@@ -1,11 +1,11 @@
 use crate::{
-    common::{arena::Arena, span::Span},
+    common::span::Span,
     frontend::{
         lexer::{Lexer, Token, TokenKind},
         parser::{
             associativity::Associativity,
             diagnostic::{ParseDiagnostic, ParseDiagnosticKind},
-            expr::{Expr, ExprKind, ExprPtr, InfixOp, PrefixOp},
+            expr::{Expr, ExprKind, InfixOp, PrefixOp},
             precedence::{BindingPower, Precedence},
         },
     },
@@ -17,23 +17,21 @@ mod expr;
 pub mod precedence;
 
 #[derive(Debug, Clone)]
-pub struct Supercombinator<'arena> {
+pub struct Supercombinator {
     pub name: String,
     pub args: Vec<String>,
-    pub body: ExprPtr<'arena>,
+    pub body: Box<Expr>,
 }
 
-pub struct Parser<'src, 'arena> {
+pub struct Parser<'src> {
     lexer: Lexer<'src>,
-    arena: &'arena Arena<Expr<'arena>>,
     diagnostics: Vec<ParseDiagnostic>,
 }
 
-impl<'src, 'arena> Parser<'src, 'arena> {
-    pub fn new(lexer: Lexer<'src>, arena: &'arena Arena<Expr<'arena>>) -> Self {
+impl<'src> Parser<'src> {
+    pub fn new(lexer: Lexer<'src>) -> Self {
         Self {
             lexer,
-            arena,
             diagnostics: Vec::new(),
         }
     }
@@ -59,15 +57,9 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         self.lexer.current()
     }
 
-    // ---- arena ----
-
-    fn alloc_expr(&self, expr: Expr<'arena>) -> ExprPtr<'arena> {
-        self.arena.alloc(expr)
-    }
-
     // ---- parsing ----
 
-    pub fn parse(&mut self) -> Vec<Supercombinator<'arena>> {
+    pub fn parse(&mut self) -> Vec<Supercombinator> {
         let mut scs = Vec::new();
         while !self.peek().kind.is_eof() {
             if let Some(sc) = self.parse_sc() {
@@ -77,7 +69,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         scs
     }
 
-    fn parse_sc(&mut self) -> Option<Supercombinator<'arena>> {
+    fn parse_sc(&mut self) -> Option<Supercombinator> {
         let mut is_ident_first = true;
 
         // Parse an ident as name
@@ -118,7 +110,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
                     return Some(Supercombinator {
                         name,
                         args,
-                        body: self.alloc_expr(Expr::err()),
+                        body: Box::new(Expr::err()),
                     });
                 }
                 TokenKind::Equal => {
@@ -164,7 +156,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         Some(Supercombinator { name, args, body })
     }
 
-    fn parse_expr(&mut self) -> ExprPtr<'arena> {
+    fn parse_expr(&mut self) -> Box<Expr> {
         self.parse_expr_bp(BindingPower::lowest())
     }
 
@@ -172,7 +164,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
     ///
     /// Returns an [`ExprPtr`] handle into the arena.
     /// The handle is valid as long as the parser is alive.
-    fn parse_expr_bp(&mut self, min_bp: BindingPower) -> ExprPtr<'arena> {
+    fn parse_expr_bp(&mut self, min_bp: BindingPower) -> Box<Expr> {
         let cur = self.eat();
         let mut left = self.parse_prefix(cur);
         let mut seen_non_assoc = false;
@@ -211,32 +203,32 @@ impl<'src, 'arena> Parser<'src, 'arena> {
         left
     }
 
-    fn parse_app(&mut self, left: ExprPtr<'arena>) -> ExprPtr<'arena> {
+    fn parse_app(&mut self, left: Box<Expr>) -> Box<Expr> {
         let (_, rbp) = Precedence::Call.to_infix_bp();
         let right = self.parse_expr_bp(rbp);
         let span = left.span.merge(right.span);
-        self.alloc_expr(Expr::new(ExprKind::App(left, right), span))
+        Box::new(Expr::new(ExprKind::App(left, right), span))
     }
 
     /// Parse a token as the **start** of an expression.
-    fn parse_prefix(&mut self, token: Token) -> ExprPtr<'arena> {
+    fn parse_prefix(&mut self, token: Token) -> Box<Expr> {
         match token.kind {
-            TokenKind::Number(n) => self.alloc_expr(Expr::new(ExprKind::Number(n), token.span)),
+            TokenKind::Number(n) => Box::new(Expr::new(ExprKind::Number(n), token.span)),
 
-            TokenKind::String(s) => self.alloc_expr(Expr::new(ExprKind::String(s), token.span)),
+            TokenKind::String(s) => Box::new(Expr::new(ExprKind::String(s), token.span)),
 
-            TokenKind::Ident(name) => self.alloc_expr(Expr::new(ExprKind::Var(name), token.span)),
+            TokenKind::Ident(name) => Box::new(Expr::new(ExprKind::Var(name), token.span)),
 
             TokenKind::Plus => {
                 let right = self.parse_expr_bp(BindingPower::prefix());
                 let span = token.span.merge(right.span);
-                self.alloc_expr(Expr::new(ExprKind::Prefix(PrefixOp::Pos, right), span))
+                Box::new(Expr::new(ExprKind::Prefix(PrefixOp::Pos, right), span))
             }
 
             TokenKind::Minus => {
                 let right = self.parse_expr_bp(BindingPower::prefix());
                 let span = token.span.merge(right.span);
-                self.alloc_expr(Expr::new(ExprKind::Prefix(PrefixOp::Neg, right), span))
+                Box::new(Expr::new(ExprKind::Prefix(PrefixOp::Neg, right), span))
             }
 
             TokenKind::LParen => {
@@ -250,7 +242,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
 
             TokenKind::RParen => {
                 self.report(ParseDiagnosticKind::UnclosedRParen, token.span);
-                self.alloc_expr(Expr::err())
+                Box::new(Expr::err())
             }
 
             _ => {
@@ -258,13 +250,13 @@ impl<'src, 'arena> Parser<'src, 'arena> {
                     ParseDiagnosticKind::NotAnExpression { found: token.kind },
                     token.span,
                 );
-                self.alloc_expr(Expr::err())
+                Box::new(Expr::err())
             }
         }
     }
 
     /// Parse an infix (left denotation) operator and its right-hand side.
-    fn parse_infix(&mut self, left: ExprPtr<'arena>) -> ExprPtr<'arena> {
+    fn parse_infix(&mut self, left: Box<Expr>) -> Box<Expr> {
         // Copy everything we need from peek() before any mutable call.
         let op_tok = self.eat();
 
@@ -284,7 +276,7 @@ impl<'src, 'arena> Parser<'src, 'arena> {
                     .to_infix_bp();
                 let right = self.parse_expr_bp(rbp);
                 let span = op_tok.span.merge(left.span).merge(right.span);
-                self.alloc_expr(Expr::new(ExprKind::Infix(op, left, right), span))
+                Box::new(Expr::new(ExprKind::Infix(op, left, right), span))
             }
             TokenKind::Dot => {
                 // TODO: Maybe need a new ExprKind

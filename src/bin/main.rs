@@ -1,7 +1,4 @@
-use rhon_rs::{
-    common::arena::Arena,
-    frontend::{lexer::Lexer, parser::Parser},
-};
+use rhon_rs::frontend::{lexer::Lexer, parser::Parser};
 
 fn main() {
     let source = r#"
@@ -12,9 +9,8 @@ fn main() {
     pipe x f = f x y;
     "#;
     let lexer = Lexer::new(source);
-    let mut arena = Arena::new();
 
-    let mut parser = Parser::new(lexer, &mut arena);
+    let mut parser = Parser::new(lexer);
 
     let scs = parser.parse();
 
