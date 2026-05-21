@@ -5,18 +5,18 @@ pub trait TokenStream {
     fn current(&self) -> &Token;
 }
 
-pub struct SliceStream<'tok> {
-    tokens: &'tok [Token],
+pub struct SliceStream {
+    tokens: Vec<Token>,
     pos: usize,
 }
 
-impl<'tok> SliceStream<'tok> {
-    pub fn new(tokens: &'tok [Token]) -> Self {
+impl SliceStream {
+    pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, pos: 0 }
     }
 }
 
-impl<'tok> TokenStream for SliceStream<'tok> {
+impl TokenStream for SliceStream {
     fn advance(&mut self) -> Token {
         let cur = self.current().clone(); // TODO: clone is not good
         self.pos += 1;
