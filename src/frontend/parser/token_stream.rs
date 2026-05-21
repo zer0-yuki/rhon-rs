@@ -12,10 +12,11 @@ pub struct SliceStream {
 impl SliceStream {
     pub fn new<T>(tokens: T) -> Self
     where
-        T: DoubleEndedIterator<Item = Token>,
+        T: IntoIterator<Item = Token>,
+        T::IntoIter: DoubleEndedIterator,
     {
         Self {
-            tokens: tokens.rev().collect(),
+            tokens: tokens.into_iter().rev().collect(),
         }
     }
 }
