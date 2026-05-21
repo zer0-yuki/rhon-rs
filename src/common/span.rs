@@ -9,7 +9,11 @@ pub struct Span {
 
 impl fmt::Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}..{}", self.start, self.end)
+        if self.is_dummy() {
+            write!(f, "DUMMY")
+        } else {
+            write!(f, "{}..{}", self.start, self.end)
+        }
     }
 }
 
