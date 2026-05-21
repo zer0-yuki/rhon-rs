@@ -4,7 +4,10 @@ mod token;
 pub use diagnostic::LexDiagnostic;
 pub use token::{Token, TokenKind};
 
-use crate::{common::span::Span, frontend::lexer::diagnostic::LexDiagnosticKind};
+use crate::{
+    common::span::Span,
+    frontend::{lexer::diagnostic::LexDiagnosticKind, parser::token_stream::TokenStream},
+};
 
 pub struct Lexer<'src> {
     source: &'src str,
@@ -22,6 +25,20 @@ pub struct Lexer<'src> {
     diagnostics: Vec<LexDiagnostic>,
 }
 
+impl<'src> TokenStream for Lexer<'src> {
+    fn current(&self) -> &Token {
+        &self.current
+    }
+
+    /// Advance to the next token, returning the *previous* current token.
+    fn advance(&mut self) -> Token {
+        let next = self.next_token();
+        let prev_next = std::mem::replace(&mut self.next, next);
+        let prev_cur = std::mem::replace(&mut self.current, prev_next);
+        prev_cur
+    }
+}
+
 impl<'src> Lexer<'src> {
     pub fn new(source: &'src str) -> Self {
         let mut lexer = Self {
@@ -29,8 +46,8 @@ impl<'src> Lexer<'src> {
             pos: 0,
             linebreaks: vec![],
             prev_is_whitespace: false,
-            current: Token::eof(),
-            next: Token::eof(),
+            current: Token::EOF,
+            next: Token::EOF,
             diagnostics: Vec::new(),
         };
         lexer.current = lexer.next_token();
@@ -38,20 +55,8 @@ impl<'src> Lexer<'src> {
         lexer
     }
 
-    pub fn current(&self) -> &Token {
-        &self.current
-    }
-
     pub fn next(&self) -> &Token {
         &self.next
-    }
-
-    /// Advance to the next token, returning the *previous* current token.
-    pub fn advance(&mut self) -> Token {
-        let next = self.next_token();
-        let prev_next = std::mem::replace(&mut self.next, next);
-        let prev_cur = std::mem::replace(&mut self.current, prev_next);
-        prev_cur
     }
 
     pub fn diagnostics(&self) -> &[LexDiagnostic] {
@@ -165,7 +170,7 @@ impl<'src> Lexer<'src> {
         let c = self.advance_char();
 
         match c {
-            '\0' => Token::eof(),
+            '\0' => Token::EOF,
 
             '+' => {
                 if self.peek_char().is_ascii_digit() && (self.prev_is_whitespace || start == 0) {
@@ -204,7 +209,7 @@ impl<'src> Lexer<'src> {
             _ => {
                 self.report(LexDiagnosticKind::UnknownChar, start);
                 // Error recovery: skip the unknown char and produce a dummy token
-                Token::err()
+                Token::ERR
             }
         }
     }
@@ -349,7 +354,7 @@ mod tests {
         fn reports_unknown_char() {
             let mut lexer = Lexer::new("#");
             let tokens: Vec<_> = lexer.by_ref().collect();
-            assert_eq!(tokens, vec![Token::err()]);
+            assert_eq!(tokens, vec![Token::ERR]);
             assert_eq!(lexer.diagnostics().len(), 1);
             assert!(matches!(
                 lexer.diagnostics()[0].kind,
