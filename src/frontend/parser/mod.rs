@@ -145,11 +145,23 @@ where
         let mut is_semicolon = true;
         let cur = loop {
             let cur = self.eat();
-            if matches!(cur.kind, TokenKind::SemiColon) {
-                break cur;
-            }
-            is_semicolon = false;
-            self.eat();
+            match &cur.kind {
+                TokenKind::Eof => {
+                    self.report(
+                        ParseDiagnosticKind::UnexpectedToken {
+                            expected: &["semicolon"],
+                            found: cur.kind,
+                        },
+                        cur.span,
+                    );
+                    return Some(Supercombinator { name, args, body });
+                }
+                TokenKind::SemiColon => break cur,
+                _ => {
+                    is_semicolon = false;
+                    self.eat();
+                }
+            };
         };
         if !is_semicolon {
             self.report(
