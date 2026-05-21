@@ -262,7 +262,7 @@ where
 
             TokenKind::RParen => {
                 self.report(ParseDiagnosticKind::UnclosedRParen, token.span);
-                Box::new(Expr::err())
+                Box::new(Expr::ERR)
             }
 
             _ => {
