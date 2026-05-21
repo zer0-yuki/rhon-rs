@@ -56,17 +56,13 @@ impl Token {
         Self { kind, span }
     }
 
-    pub fn eof() -> Self {
-        Self {
-            kind: TokenKind::Eof,
-            span: Default::default(),
-        }
-    }
+    pub const EOF: Token = Token {
+        kind: TokenKind::Eof,
+        span: Span::DUMMY,
+    };
 
-    pub fn err() -> Self {
-        Self {
-            kind: TokenKind::Err,
-            span: Default::default(),
-        }
-    }
+    pub const ERR: Token = Token {
+        kind: TokenKind::Err,
+        span: Span::DUMMY,
+    };
 }

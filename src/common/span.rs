@@ -15,11 +15,16 @@ impl fmt::Debug for Span {
 
 impl Default for Span {
     fn default() -> Self {
-        Self { start: 0, end: 0 }
+        Span::DUMMY
     }
 }
 
 impl Span {
+    pub const DUMMY: Span = Span {
+        start: usize::MAX,
+        end: usize::MAX,
+    };
+
     pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
@@ -30,6 +35,10 @@ impl Span {
 
     pub fn is_empty(&self) -> bool {
         self.start == self.end
+    }
+
+    pub fn is_dummy(&self) -> bool {
+        *self == Span::DUMMY
     }
 
     pub fn contains(&self, pos: usize) -> bool {
