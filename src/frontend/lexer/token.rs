@@ -56,6 +56,13 @@ impl Token {
         Self { kind, span }
     }
 
+    pub fn new_dummy(kind: TokenKind) -> Self {
+        Self {
+            kind,
+            span: Span::DUMMY,
+        }
+    }
+
     pub const EOF: Token = Token {
         kind: TokenKind::Eof,
         span: Span::DUMMY,
