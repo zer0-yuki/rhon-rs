@@ -231,7 +231,7 @@ impl<'src> Iterator for Lexer<'src> {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::utils::assert_len_eq;
+    use crate::common::assert::assert_len_eq;
 
     use super::*;
 
