@@ -1,9 +1,8 @@
-use std::{env, process};
+use std::{env, fs, path, process};
 
 use rhon_rs::common::assert::snapshot::SNAPSHOT_UPDATE_VAR;
 
 fn main() {
-    println!("command: {:?}", env::args().collect::<Vec<_>>());
     let mut args: Vec<_> = env::args().skip(1).collect();
 
     // In direct execution, there's no problem,
@@ -12,6 +11,15 @@ fn main() {
     if args[0] == "snapshot" {
         args.remove(0);
     };
+
+    for arg in &mut args {
+        if arg == "remove" {
+            match remove_snapshots("./") {
+                Ok(_) => process::exit(0),
+                Err(e) => panic!("Failed to remove snapshots: {}", e),
+            }
+        }
+    }
 
     let status = process::Command::new("cargo")
         .env(SNAPSHOT_UPDATE_VAR, "")
@@ -22,4 +30,33 @@ fn main() {
         .expect("Failed to execute `test` command.");
 
     process::exit(status.code().unwrap_or(1))
+}
+
+pub fn remove_snapshots<P: AsRef<path::Path>>(root: P) -> std::io::Result<()> {
+    let root = root.as_ref();
+    if !root.is_dir() {
+        return Ok(());
+    }
+
+    for entry in fs::read_dir(root)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            let file_name = path.file_name().and_then(|n| n.to_str());
+            if file_name == Some("snapshots") {
+                for snap_entry in fs::read_dir(&path)? {
+                    let snap_path = snap_entry?.path();
+                    if snap_path.is_file()
+                        && snap_path.extension().and_then(|e| e.to_str()) == Some("snap")
+                    {
+                        fs::remove_file(&snap_path)?;
+                    }
+                }
+            } else {
+                remove_snapshots(&path)?;
+            }
+        }
+    }
+    Ok(())
 }
