@@ -314,7 +314,7 @@ mod test {
     use super::*;
 
     /// Parse tokens.
-    fn parse<T>(tokens: &mut T) -> (Vec<Supercombinator>, Parser<'_, T>)
+    fn parse<T>(tokens: &mut T) -> (Vec<Supercombinator>, Vec<ParseDiagnostic>)
     where
         T: TokenStream,
     {
