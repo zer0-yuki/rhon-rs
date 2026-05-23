@@ -327,13 +327,8 @@ mod test {
     /// # Panics
     /// If there are parsing errors, it will panic.
     fn parse_ok(tokens: &mut impl TokenStream) -> Vec<Supercombinator> {
-        let (sc_defs, p) = parse(tokens);
-        assert_eq!(
-            p.diagnostics().len(),
-            0,
-            "Unexpected parse error:\n{:?}",
-            p.diagnostics()
-        );
+        let (sc_defs, diags) = parse(tokens);
+        assert_eq!(diags.len(), 0, "Unexpected parse error:\n{:?}", diags);
         sc_defs
     }
 
