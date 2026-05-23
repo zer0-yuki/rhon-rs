@@ -357,26 +357,24 @@ mod test {
 
         #[test]
         fn parses_multiple_sc_defs() {
-            let token_kinds = {
-                use TokenKind::*;
-                [
-                    // x = 1.0;
-                    Ident("x".into()),
-                    Equal,
-                    Number(1.0),
-                    SemiColon,
-                    // y = "hi";
-                    Ident("y".into()),
-                    Equal,
-                    String("hi".into()),
-                    SemiColon,
-                    // z = x;
-                    Ident("z".into()),
-                    Equal,
-                    Ident("x".into()),
-                    SemiColon,
-                ]
-            };
+            use TokenKind::*;
+            let token_kinds = [
+                // x = 1.0;
+                Ident("x".into()),
+                Equal,
+                Number(1.0),
+                SemiColon,
+                // y = "hi";
+                Ident("y".into()),
+                Equal,
+                String("hi".into()),
+                SemiColon,
+                // z = x;
+                Ident("z".into()),
+                Equal,
+                Ident("x".into()),
+                SemiColon,
+            ];
             let sc_defs = parse_ok_from_kinds(token_kinds);
             assert_snapshot!(sc_defs);
         }
