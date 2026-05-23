@@ -107,14 +107,15 @@ pub mod __private {
     }
 
     #[doc(hidden)]
-    pub fn assert_snapshot<T: fmt::Debug>(val: T, filename: &path::Path) {
+    pub fn assert_snapshot<T: fmt::Debug, P: AsRef<path::Path>>(val: T, filename: P) {
         if let Err(e) = try_assert_snapshot(val, filename) {
             panic!("Failed to read file: {}", e)
         }
     }
 }
 
-fn try_assert_snapshot<T: fmt::Debug>(val: T, filename: &path::Path) -> io::Result<()> {
+fn try_assert_snapshot<T: fmt::Debug, P: AsRef<path::Path>>(val: T, filename: P) -> io::Result<()> {
+    let filename = filename.as_ref();
     let actual = format!("{:#?}", val);
 
     let expected = match fs::read_to_string(filename) {
