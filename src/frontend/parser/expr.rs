@@ -38,6 +38,10 @@ impl ExprKind {
             span: Span::DUMMY,
         }
     }
+
+    pub fn into_boxed_expr(self) -> Box<Expr> {
+        self.into_expr().into_box()
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -64,5 +68,9 @@ impl Expr {
 
     pub fn new(kind: ExprKind, span: Span) -> Self {
         Self { kind, span }
+    }
+
+    pub fn into_box(self) -> Box<Self> {
+        Box::new(self)
     }
 }
