@@ -8,16 +8,25 @@ fn main() {
     // In direct execution, there's no problem,
     // however in cargo command, another arg `snapshot` will be added
     // after first arg.
-    if args[0] == "snapshot" {
+    if let Some(arg) = args.first()
+        && arg == "snapshot"
+    {
         args.remove(0);
     };
 
-    for arg in &mut args {
-        if arg == "remove" {
-            match remove_snapshots("./") {
+    if let Some(arg) = args.first() {
+        match arg.as_str() {
+            "remove" => match remove_snapshots("./") {
                 Ok(_) => process::exit(0),
                 Err(e) => panic!("Failed to remove snapshots: {}", e),
-            }
+            },
+            "refresh" => match remove_snapshots("./") {
+                Ok(_) => {
+                    args.remove(0);
+                }
+                Err(e) => panic!("Failed to remove snapshots: {}", e),
+            },
+            _ => {}
         }
     }
 
