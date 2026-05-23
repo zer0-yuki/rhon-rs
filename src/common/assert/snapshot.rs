@@ -189,14 +189,14 @@ fn show_diff(old: &str, new: &str) {
     let old_lines: Vec<_> = old.split("\n").collect();
     let new_lines: Vec<_> = new.split("\n").collect();
     let diff_ops = diff(&old_lines, &new_lines);
-    eprintln!("{}", "━".repeat(40));
+    eprintln!("┏{}", "━".repeat(40));
     for op in diff_ops {
         let line = match op {
             DiffOp::Keep(s) => format!("  {}", s).white(),
             DiffOp::Insert(s) => format!("+ {}", s).green(),
             DiffOp::Delete(s) => format!("- {}", s).red(),
         };
-        eprintln!("{}", line);
+        eprintln!("┃ {}", line);
     }
-    eprintln!("{}", "━".repeat(40));
+    eprintln!("┗{}", "━".repeat(40));
 }
