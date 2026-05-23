@@ -350,7 +350,7 @@ mod test {
         use super::*;
 
         #[test]
-        fn parse_empty() {
+        fn parses_empty() {
             let sc_defs = parse_ok_from_kinds([]);
             assert_snapshot!(sc_defs);
         }
