@@ -1,3 +1,3 @@
 pub mod arena;
+pub mod assert;
 pub mod span;
-pub mod utils;
