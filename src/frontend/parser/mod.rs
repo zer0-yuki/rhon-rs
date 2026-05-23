@@ -311,7 +311,9 @@ where
 mod test {
     use std::{iter, slice};
 
-    use crate::{common::assert::assert_len_eq, frontend::parser::token_stream::SliceStream};
+    use crate::{
+        common::assert::len_eq::assert_len_eq, frontend::parser::token_stream::SliceStream,
+    };
 
     use super::*;
 
