@@ -347,7 +347,6 @@ mod test {
     }
 
     mod parse_sc_defs {
-
         use super::*;
 
         #[test]
