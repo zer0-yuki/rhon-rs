@@ -188,6 +188,7 @@ fn try_assert_snapshot<T: fmt::Debug>(val: T, filename: &path::Path) -> io::Resu
 fn show_diff(old: &str, new: &str) {
     let old_lines: Vec<_> = old.split("\n").collect();
     let new_lines: Vec<_> = new.split("\n").collect();
+
     let diff_ops = diff(&old_lines, &new_lines);
     eprintln!("┏{}", "━".repeat(40));
     for op in diff_ops {
