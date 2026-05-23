@@ -1,0 +1,23 @@
+[
+    Supercombinator {
+        name: "x",
+        args: [],
+        body: Number(
+            1.0,
+        ) @ [dummy],
+    },
+    Supercombinator {
+        name: "y",
+        args: [],
+        body: String(
+            "hi",
+        ) @ [dummy],
+    },
+    Supercombinator {
+        name: "z",
+        args: [],
+        body: Var(
+            "x",
+        ) @ [dummy],
+    },
+]
