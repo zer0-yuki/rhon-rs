@@ -6,8 +6,27 @@ use crate::common::diff::{DiffOp, diff};
 
 pub const SNAPSHOT_UPDATE_VAR: &str = "SNAPSHOT_UPDATE";
 
+pub struct DisplayToDebug<T>(pub T);
+
+impl<T: std::fmt::Display> std::fmt::Debug for DisplayToDebug<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.0, f)
+    }
+}
+
 #[macro_export]
 macro_rules! assert_snapshot {
+    ($($name:ident = $val:expr),* $(,)?) => {
+        let mut output = std::string::String::new();
+        {
+            use std::fmt::Write;
+            $(
+                let _ = writeln!(output, "{} = {:#?}", stringify!($name), &$val);
+            )*
+        }
+        $crate::assert_snapshot!($crate::common::assert::snapshot::DisplayToDebug(output));
+    };
+
     ($val:expr) => {
         $crate::common::assert::snapshot::__private::assert_snapshot(
             $val,
