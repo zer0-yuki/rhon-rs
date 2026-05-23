@@ -319,7 +319,7 @@ mod test {
         T: TokenStream,
     {
         let mut parser = Parser::new(tokens);
-        (parser.parse(), parser)
+        (parser.parse(), parser.diagnostics)
     }
 
     /// Parse tokens and ensure no errors.
