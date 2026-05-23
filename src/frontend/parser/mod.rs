@@ -332,6 +332,15 @@ mod test {
         sc_defs
     }
 
+    fn parse_from_kinds<T>(token_kinds: T) -> (Vec<Supercombinator>, Vec<ParseDiagnostic>)
+    where
+        T: IntoIterator<Item = TokenKind>,
+        T::IntoIter: DoubleEndedIterator,
+    {
+        let tokens = token_kinds.into_iter().map(TokenKind::into_token);
+        parse(&mut SliceStream::new(tokens))
+    }
+
     fn parse_ok_from_kinds<T>(token_kinds: T) -> Vec<Supercombinator>
     where
         T: IntoIterator<Item = TokenKind>,
