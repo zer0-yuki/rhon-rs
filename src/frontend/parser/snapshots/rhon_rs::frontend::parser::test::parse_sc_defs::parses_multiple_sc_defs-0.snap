@@ -1,4 +1,30 @@
-[
+tokens = [
+    Ident(
+        "x",
+    ),
+    Equal,
+    Number(
+        1.0,
+    ),
+    SemiColon,
+    Ident(
+        "y",
+    ),
+    Equal,
+    String(
+        "hi",
+    ),
+    SemiColon,
+    Ident(
+        "z",
+    ),
+    Equal,
+    Ident(
+        "x",
+    ),
+    SemiColon,
+]
+sc_defs = [
     Supercombinator {
         name: "x",
         args: [],
@@ -21,3 +47,4 @@
         ) @ [dummy],
     },
 ]
+diags = []

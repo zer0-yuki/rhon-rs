@@ -321,16 +321,6 @@ mod test {
         (parser.parse(), parser.diagnostics)
     }
 
-    /// Parse tokens and ensure no errors.
-    ///
-    /// # Panics
-    /// If there are parsing errors, it will panic.
-    fn parse_ok(tokens: &mut impl TokenStream) -> Vec<Supercombinator> {
-        let (sc_defs, diags) = parse(tokens);
-        assert_eq!(diags.len(), 0, "Unexpected parse error:\n{:?}", diags);
-        sc_defs
-    }
-
     fn parse_from_kinds<T>(token_kinds: T) -> (Vec<Supercombinator>, Vec<ParseDiagnostic>)
     where
         T: IntoIterator<Item = TokenKind>,
@@ -340,28 +330,26 @@ mod test {
         parse(&mut SliceStream::new(tokens))
     }
 
-    fn parse_ok_from_kinds<T>(token_kinds: T) -> Vec<Supercombinator>
-    where
-        T: IntoIterator<Item = TokenKind>,
-        T::IntoIter: DoubleEndedIterator,
-    {
-        let tokens = token_kinds.into_iter().map(TokenKind::into_token);
-        parse_ok(&mut SliceStream::new(tokens))
-    }
-
     mod parse_sc_defs {
         use super::*;
+        use TokenKind::*;
 
-        #[test]
-        fn parses_empty() {
-            let sc_defs = parse_ok_from_kinds([]);
-            assert_snapshot!(sc_defs);
+        macro_rules! assert_tokens {
+            ($name:ident, $tokens:expr) => {
+                #[test]
+                fn $name() {
+                    let token_kinds = $tokens;
+                    let tokens = token_kinds.clone();
+                    let (sc_defs, diags) = parse_from_kinds(token_kinds);
+                    assert_snapshot!(tokens = tokens, sc_defs = sc_defs, diags = diags);
+                }
+            };
         }
 
-        #[test]
-        fn parses_multiple_sc_defs() {
-            use TokenKind::*;
-            let token_kinds = [
+        assert_tokens!(parses_empty, []);
+        assert_tokens!(
+            parses_multiple_sc_defs,
+            [
                 // x = 1.0;
                 Ident("x".into()),
                 Equal,
@@ -377,9 +365,7 @@ mod test {
                 Equal,
                 Ident("x".into()),
                 SemiColon,
-            ];
-            let sc_defs = parse_ok_from_kinds(token_kinds);
-            assert_snapshot!(sc_defs);
-        }
+            ]
+        );
     }
 }
