@@ -1,6 +1,4 @@
-tokens = [
-    SemiColon,
-]
+tokens = [SemiColon]
 sc_defs = []
 diags = [
     ParseDiagnostic {

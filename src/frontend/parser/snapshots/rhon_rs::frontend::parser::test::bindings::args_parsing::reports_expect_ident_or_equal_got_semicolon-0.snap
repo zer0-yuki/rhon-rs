@@ -1,9 +1,4 @@
-tokens = [
-    Ident(
-        "x",
-    ),
-    SemiColon,
-]
+tokens = [Ident("x"), SemiColon]
 sc_defs = [
     Supercombinator {
         name: "x",

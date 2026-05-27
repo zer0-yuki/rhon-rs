@@ -345,7 +345,9 @@ mod test {
     }
 
     mod bindings {
-        use super::*;
+        use crate::common::fmt::DebugCompact;
+
+use super::*;
         use TokenKind::*;
 
         macro_rules! assert_tokens {
@@ -355,7 +357,7 @@ mod test {
                     let token_kinds = $tokens;
                     let tokens = token_kinds.clone();
                     let (sc_defs, diags) = parse_from_kinds(token_kinds);
-                    assert_snapshot!(tokens = tokens, sc_defs = sc_defs, diags = diags);
+                    assert_snapshot!(tokens = DebugCompact::new(&tokens), sc_defs = sc_defs, diags = diags);
                 }
             };
         }
