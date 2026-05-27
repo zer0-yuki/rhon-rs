@@ -106,13 +106,13 @@ where
             }
         };
 
-        if let Some(kind) = first_token_not_ident.into_inner() {
+        if let Some(token) = first_token_not_ident.into_inner() {
             self.report(
                 ParseDiagnosticKind::UnexpectedToken {
                     expected: &["ident"],
-                    found: kind,
+                    found: token.kind,
                 },
-                Default::default(),
+                token.span,
             );
         }
 
