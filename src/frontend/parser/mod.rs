@@ -355,7 +355,7 @@ mod test {
                 #[test]
                 fn $name() {
                     let token_kinds = $tokens;
-                    let tokens = token_kinds.clone();
+                    let tokens = token_kinds.clone(); // TODO: can we remove this clone
                     let (sc_defs, diags) = parse_from_kinds(token_kinds);
                     assert_snapshot!(
                         tokens = DebugCompact::new(&tokens),
