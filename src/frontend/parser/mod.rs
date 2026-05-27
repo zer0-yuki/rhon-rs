@@ -3,7 +3,7 @@ use std::cell::OnceCell;
 use crate::{
     common::span::Span,
     frontend::{
-        lexer::{Token, TokenKind},
+        lexer::{Token, TokenKind, TokenType},
         parser::{
             associativity::Associativity,
             diagnostic::{ParseDiagnostic, ParseDiagnosticKind},
@@ -89,7 +89,7 @@ where
                 TokenKind::Eof | TokenKind::SemiColon => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["ident"],
+                            expected: &[TokenType::Ident],
                             found: cur.kind,
                         },
                         cur.span,
@@ -109,7 +109,7 @@ where
         if let Some(token) = first_token_not_ident.into_inner() {
             self.report(
                 ParseDiagnosticKind::UnexpectedToken {
-                    expected: &["ident"],
+                    expected: &[TokenType::Ident],
                     found: token.kind,
                 },
                 token.span,
@@ -124,7 +124,7 @@ where
                 TokenKind::Eof | TokenKind::SemiColon => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["ident", "equal"],
+                            expected: &[TokenType::Ident, TokenType::Equal],
                             found: cur.kind,
                         },
                         cur.span,
@@ -144,7 +144,7 @@ where
                 _ => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["ident", "equal"],
+                            expected: &[TokenType::Ident, TokenType::Equal],
                             found: cur.kind,
                         },
                         cur.span,
@@ -163,7 +163,7 @@ where
                 TokenKind::Eof => {
                     self.report(
                         ParseDiagnosticKind::UnexpectedToken {
-                            expected: &["semicolon"],
+                            expected: &[TokenType::SemiColon],
                             found: cur.kind,
                         },
                         cur.span,
@@ -179,7 +179,7 @@ where
         if !is_semicolon {
             self.report(
                 ParseDiagnosticKind::UnexpectedToken {
-                    expected: &["semicolon"],
+                    expected: &[TokenType::SemiColon],
                     found: cur.kind,
                 },
                 cur.span,
@@ -347,7 +347,7 @@ mod test {
     mod bindings {
         use crate::common::fmt::DebugCompact;
 
-use super::*;
+        use super::*;
         use TokenKind::*;
 
         macro_rules! assert_tokens {
@@ -357,7 +357,11 @@ use super::*;
                     let token_kinds = $tokens;
                     let tokens = token_kinds.clone();
                     let (sc_defs, diags) = parse_from_kinds(token_kinds);
-                    assert_snapshot!(tokens = DebugCompact::new(&tokens), sc_defs = sc_defs, diags = diags);
+                    assert_snapshot!(
+                        tokens = DebugCompact::new(&tokens),
+                        sc_defs = sc_defs,
+                        diags = diags
+                    );
                 }
             };
         }

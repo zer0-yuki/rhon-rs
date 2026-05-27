@@ -2,7 +2,7 @@ mod diagnostic;
 mod token;
 
 pub use diagnostic::LexDiagnostic;
-pub use token::{Token, TokenKind};
+pub use token::{Token, TokenKind, TokenType};
 
 use crate::{
     common::span::Span,

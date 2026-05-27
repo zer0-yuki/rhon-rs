@@ -51,6 +51,41 @@ impl TokenKind {
     }
 }
 
+/// A copy of [`TokenKind`] without data.
+/// This type is **ONLY** used for diagnostics.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TokenType {
+    // Literals
+    Number,
+    String,
+
+    // Identifiers
+    Ident,
+
+    // Operators
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Dot,
+
+    // Delimiters
+    LParen,
+    RParen,
+    Colon,
+    SemiColon,
+    LBrace,
+    RBrace,
+    Comma,
+    Equal,
+
+    // Sentinel
+    Eof,
+
+    // Dummy
+    Err,
+}
+
 /// A lexical token produced by the lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {

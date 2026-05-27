@@ -10,8 +10,8 @@ diags = [
     ParseDiagnostic {
         kind: UnexpectedToken {
             expected: [
-                "ident",
-                "equal",
+                Ident,
+                Equal,
             ],
             found: SemiColon,
         },

@@ -12,7 +12,7 @@ diags = [
     ParseDiagnostic {
         kind: UnexpectedToken {
             expected: [
-                "ident",
+                Ident,
             ],
             found: Plus,
         },
