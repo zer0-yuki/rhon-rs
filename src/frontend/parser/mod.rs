@@ -78,14 +78,20 @@ where
     }
 
     fn parse_sc(&mut self) -> Option<Supercombinator> {
-        let mut is_ident_first = true;
+        let first_token_not_ident = OnceCell::new();
 
         // Parse an ident as name
         let name = loop {
             let cur = self.eat();
             match cur.kind {
                 TokenKind::Eof | TokenKind::SemiColon => {
-                    self.report(ParseDiagnosticKind::NotABinding, cur.span);
+                    self.report(
+                        ParseDiagnosticKind::UnexpectedToken {
+                            expected: &["ident"],
+                            found: cur.kind,
+                        },
+                        cur.span,
+                    );
                     return None;
                 }
                 TokenKind::Ident(name) => {
@@ -93,13 +99,19 @@ where
                     break name;
                 }
                 _ => {
-                    is_ident_first = false;
+                    first_token_not_ident.get_or_init(|| cur.kind);
                 }
             }
         };
 
-        if !is_ident_first {
-            self.report(ParseDiagnosticKind::NotABinding, Default::default());
+        if let Some(kind) = first_token_not_ident.into_inner() {
+            self.report(
+                ParseDiagnosticKind::UnexpectedToken {
+                    expected: &["ident"],
+                    found: kind,
+                },
+                Default::default(),
+            );
         }
 
         // Parse args and equal token

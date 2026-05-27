@@ -11,7 +11,6 @@ pub enum ParseDiagnosticKind {
     },
     UnclosedLParen,
     UnclosedRParen,
-    NotABinding,
     NonAssociativeChain,
 }
 
