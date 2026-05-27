@@ -348,7 +348,7 @@ mod test {
 
         assert_tokens!(parses_empty, []);
         assert_tokens!(
-            parses_multiple_sc_defs,
+            parses_multiple_bindings,
             [
                 // x = x;
                 Ident("x".into()),
