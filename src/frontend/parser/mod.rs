@@ -159,7 +159,6 @@ where
                 TokenKind::SemiColon => break cur,
                 _ => {
                     is_semicolon = false;
-                    self.eat();
                 }
             };
         };
