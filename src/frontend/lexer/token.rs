@@ -51,6 +51,7 @@ impl TokenKind {
     }
 }
 
+// TODO: use proc macro to generate this
 /// A copy of [`TokenKind`] without data.
 /// This type is **ONLY** used for diagnostics.
 #[derive(Debug, Clone, PartialEq, Eq)]
