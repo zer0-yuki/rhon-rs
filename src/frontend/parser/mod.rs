@@ -101,7 +101,7 @@ where
                     break name;
                 }
                 _ => {
-                    first_token_not_ident.get_or_init(|| cur.kind);
+                    first_token_not_ident.get_or_init(|| cur);
                 }
             }
         };
