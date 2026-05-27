@@ -350,22 +350,24 @@ mod test {
         assert_tokens!(
             parses_multiple_sc_defs,
             [
-                // x = 1.0;
+                // x = x;
                 Ident("x".into()),
                 Equal,
-                Number(1.0),
+                Ident("x".into()),
                 SemiColon,
-                // y = "hi";
+                // y = y;
                 Ident("y".into()),
                 Equal,
-                String("hi".into()),
+                Ident("y".into()),
                 SemiColon,
-                // z = x;
+                // z = z;
                 Ident("z".into()),
                 Equal,
-                Ident("x".into()),
+                Ident("z".into()),
                 SemiColon,
             ]
         );
+        assert_tokens!(parses_semicolon, [SemiColon]);
+        assert_tokens!(parses_ident_semicolon, [Ident("x".into()), SemiColon]);
     }
 }

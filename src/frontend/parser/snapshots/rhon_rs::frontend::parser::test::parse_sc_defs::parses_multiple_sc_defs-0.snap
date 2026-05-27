@@ -3,16 +3,16 @@ tokens = [
         "x",
     ),
     Equal,
-    Number(
-        1.0,
+    Ident(
+        "x",
     ),
     SemiColon,
     Ident(
         "y",
     ),
     Equal,
-    String(
-        "hi",
+    Ident(
+        "y",
     ),
     SemiColon,
     Ident(
@@ -20,7 +20,7 @@ tokens = [
     ),
     Equal,
     Ident(
-        "x",
+        "z",
     ),
     SemiColon,
 ]
@@ -28,22 +28,22 @@ sc_defs = [
     Supercombinator {
         name: "x",
         args: [],
-        body: Number(
-            1.0,
+        body: Var(
+            "x",
         ) @ [dummy],
     },
     Supercombinator {
         name: "y",
         args: [],
-        body: String(
-            "hi",
+        body: Var(
+            "y",
         ) @ [dummy],
     },
     Supercombinator {
         name: "z",
         args: [],
         body: Var(
-            "x",
+            "z",
         ) @ [dummy],
     },
 ]
