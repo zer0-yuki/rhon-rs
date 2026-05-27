@@ -1,0 +1,10 @@
+tokens = [
+    SemiColon,
+]
+sc_defs = []
+diags = [
+    ParseDiagnostic {
+        kind: NotABinding,
+        span: [dummy],
+    },
+]

@@ -330,7 +330,7 @@ mod test {
         parse(&mut SliceStream::new(tokens))
     }
 
-    mod parse_sc_defs {
+    mod bindings {
         use super::*;
         use TokenKind::*;
 
