@@ -1,0 +1,15 @@
+tokens = [
+    SemiColon,
+]
+sc_defs = []
+diags = [
+    ParseDiagnostic {
+        kind: UnexpectedToken {
+            expected: [
+                "ident",
+            ],
+            found: SemiColon,
+        },
+        span: [dummy],
+    },
+]

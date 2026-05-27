@@ -381,7 +381,25 @@ mod test {
                 SemiColon,
             ]
         );
-        assert_tokens!(parses_semicolon, [SemiColon]);
-        assert_tokens!(parses_ident_semicolon, [Ident("x".into()), SemiColon]);
+
+        mod name_parsing {
+            use super::*;
+
+            assert_tokens!(reports_expect_ident_got_semicolon, [SemiColon]);
+            assert_tokens!(
+                reports_expect_ident_got_non_ident,
+                [Plus, Ident("x".into()), Equal, Ident("x".into()), SemiColon]
+            );
+        }
+
+        mod args_parsing {
+            use super::*;
+
+            assert_tokens!(
+                reports_expect_ident_or_equal_got_semicolon,
+                [Ident("x".into()), SemiColon]
+            );
+            // TODO: test other 3 branches
+        }
     }
 }

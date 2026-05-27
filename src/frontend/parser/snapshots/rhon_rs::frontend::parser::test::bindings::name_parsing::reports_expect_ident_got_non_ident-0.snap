@@ -1,0 +1,31 @@
+tokens = [
+    Plus,
+    Ident(
+        "x",
+    ),
+    Equal,
+    Ident(
+        "x",
+    ),
+    SemiColon,
+]
+sc_defs = [
+    Supercombinator {
+        name: "x",
+        args: [],
+        body: Var(
+            "x",
+        ) @ [dummy],
+    },
+]
+diags = [
+    ParseDiagnostic {
+        kind: UnexpectedToken {
+            expected: [
+                "ident",
+            ],
+            found: Plus,
+        },
+        span: [dummy],
+    },
+]
