@@ -137,7 +137,7 @@ fn try_assert_snapshot<T: fmt::Debug, P: AsRef<path::Path>>(val: T, filename: P)
         }
 
         panic!(
-            "\nCould not find snapshot {}. Use `cargo snapshot` to handle this issue.",
+            "\nCould not find snapshot {}.\nUse `cargo snapshot` to handle this issue.",
             filename.display().to_string().underline()
         );
     } else {
