@@ -1,3 +1,5 @@
+use std::cell::OnceCell;
+
 use crate::{
     common::span::Span,
     frontend::{
