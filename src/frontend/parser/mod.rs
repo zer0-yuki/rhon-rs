@@ -117,7 +117,7 @@ where
         }
 
         // Parse args and equal token
-        let mut args: Vec<String> = Vec::new();
+        let mut args = Vec::new();
         loop {
             let cur = self.eat();
             match cur.kind {
