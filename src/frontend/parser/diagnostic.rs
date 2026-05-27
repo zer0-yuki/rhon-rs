@@ -3,7 +3,7 @@ use crate::{common::span::Span, frontend::lexer::TokenKind};
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParseDiagnosticKind {
     UnexpectedToken {
-        expected: &'static [&'static str],
+        expected: &'static [&'static str], // TODO: Can we use `&TokenKind`?
         found: TokenKind,
     },
     NotAnExpression {
